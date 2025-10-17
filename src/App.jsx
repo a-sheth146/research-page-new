@@ -6,7 +6,7 @@ import SWEbenchResearchPage from './SWEbenchResearchPage';
 
 function App() {
   return (
-    <Router>
+    <Router basename="/research-page-new">
       <div className="flex min-h-screen bg-gray-50">
         <Sidebar />
         <main className="flex-1 ml-64">
