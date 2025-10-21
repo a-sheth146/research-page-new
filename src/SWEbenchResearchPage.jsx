@@ -149,6 +149,9 @@ qwen3-coder	1.83%
 
     const fileName = getTrajectoryFileName(selectedLanguage);
     
+    console.log('Loading trajectory data:', fileName);
+    console.log('BASE_URL:', import.meta.env.BASE_URL);
+    
     fetch(fileName)
       .then(response => {
         if (!response.ok) {
