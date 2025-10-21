@@ -133,14 +133,17 @@ qwen3-coder	1.83%
   // Load trajectory data based on selected language
   useEffect(() => {
     const getTrajectoryFileName = (language) => {
+      // Use the base path from Vite's import.meta.env.BASE_URL
+      const basePath = import.meta.env.BASE_URL;
+      
       switch (language) {
         case 'Java':
-          return '/research-page-new/trajectory-data-java.json';
+          return `${basePath}trajectory-data-java.json`;
         case 'JavaScript':
-          return '/research-page-new/trajectory-data-javascript.json';
+          return `${basePath}trajectory-data-javascript.json`;
         case 'Python':
         default:
-          return '/research-page-new/trajectory-data.json';
+          return `${basePath}trajectory-data.json`;
       }
     };
 
