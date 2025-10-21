@@ -135,12 +135,12 @@ qwen3-coder	1.83%
     const getTrajectoryFileName = (language) => {
       switch (language) {
         case 'Java':
-          return '/trajectory-data-java.json';
+          return '/research-page-new/trajectory-data-java.json';
         case 'JavaScript':
-          return '/trajectory-data-javascript.json';
+          return '/research-page-new/trajectory-data-javascript.json';
         case 'Python':
         default:
-          return '/trajectory-data.json';
+          return '/research-page-new/trajectory-data.json';
       }
     };
 
