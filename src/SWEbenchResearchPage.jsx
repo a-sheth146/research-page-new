@@ -133,8 +133,8 @@ qwen3-coder	1.83%
   // Load trajectory data based on selected language
   useEffect(() => {
     const getTrajectoryFileName = (language) => {
-      // Use the base path from Vite's import.meta.env.BASE_URL
-      const basePath = import.meta.env.BASE_URL;
+      // For GitHub Pages, use the explicit base path
+      const basePath = '/research-page-new/';
       
       switch (language) {
         case 'Java':
@@ -148,9 +148,6 @@ qwen3-coder	1.83%
     };
 
     const fileName = getTrajectoryFileName(selectedLanguage);
-    
-    console.log('Loading trajectory data:', fileName);
-    console.log('BASE_URL:', import.meta.env.BASE_URL);
     
     fetch(fileName)
       .then(response => {
