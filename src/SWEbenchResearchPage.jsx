@@ -8,17 +8,36 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
-import { Info } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
+import { Info, ArrowUpRight } from "lucide-react";
 
 export default function SWEbenchResearchPage() {
-  // --- Mock Data (pass@1-only per latest spec) -----------------------------
+
   const baseEval = [
-    { model: "GPT-4", split: "dev", pass_at_1: 0.62 },
-    { model: "Claude 3", split: "dev", pass_at_1: 0.58 },
-    { model: "Gemini 1.5", split: "dev", pass_at_1: 0.54 },
-    { model: "Mistral", split: "dev", pass_at_1: 0.43 },
+    { model: "gpt-5-2025-08-07", split: "dev", pass_at_1: 0.2680 },
+    { model: "claude-sonnet-4.5", split: "dev", pass_at_1: 0.2600 },
+    { model: "gpt5-high-reasoning", split: "dev", pass_at_1: 0.2270 },
+    { model: "claude-opus-4.1", split: "dev", pass_at_1: 0.2250 },
+    { model: "xai/grok-code-fast-1", split: "dev", pass_at_1: 0.1350 },
+    { model: "gemini/gemini-2.5-pro", split: "dev", pass_at_1: 0.1290 },
+    { model: "gpt-4o", split: "dev", pass_at_1: 0.0530 },
+    { model: "qwen3-coder", split: "dev", pass_at_1: 0.0250 },
+    { model: "qwen3-thinking-2507", split: "dev", pass_at_1: 0.0100 }
   ];
+
+  /*
+
+
+  gpt-5-2025-08-07	26.80%
+claude-sonnet-4.5	26.00%
+gpt5-high-reasoning	22.70%
+claude-opus-4.1	22.50%
+xai/grok-code-fast-1	13.50%
+gemini/gemini-2.5-pro	12.90%
+gpt-4o	5.30%
+qwen3-coder	2.50%
+qwen3-thinking-2507	1.00%
+  */
 
   const issueDist = [
     { name: "bug-report", "PR count": 246 },
@@ -39,13 +58,65 @@ export default function SWEbenchResearchPage() {
     { name: "Rust", "PR count": 25 },
   ];
 
+  // Commercial dataset data
+  const commercialEval = [
+    { model: "claude-sonnet-4.5", split: "dev", pass_at_1: 0.2008 },
+    { model: "gpt5-high-reasoning", split: "dev", pass_at_1: 0.1670 },
+    { model: "claude-opus-4.1", split: "dev", pass_at_1: 0.1570 },
+    { model: "gpt-5-2025-08-07", split: "dev", pass_at_1: 0.1690 },
+    { model: "gemini/gemini-2.5-pro", split: "dev", pass_at_1: 0.0798 },
+    { model: "gpt-4o", split: "dev", pass_at_1: 0.0375 },
+    { model: "qwen3-coder", split: "dev", pass_at_1: 0.0183 }
+  ];
+
+  /*
+
+claude-sonnet-4.5	20.08%
+gpt5-high-reasoning	16.70%
+claude-opus-4.1	15.70%
+gpt-5-2025-08-07	16.90%
+gemini/gemini-2.5-pro	7.98%
+gpt-4o	3.75%
+qwen3-coder	1.83%
+
+  */
+
+  const commercialIssueDist = [
+    { name: "bug-report", "PR count": 450 },
+    { name: "feature-request", "PR count": 380 },
+    { name: "chore", "PR count": 95 },
+    { name: "performance-issue", "PR count": 75 },
+    { name: "question", "PR count": 45 },
+    { name: "documentation", "PR count": 25 },
+    { name: "security-issue", "PR count": 30 },
+  ];
+
+  const commercialLangDist = [
+    { name: "Python", "PR count": 320 },
+    { name: "Java", "PR count": 280 },
+    { name: "TypeScript", "PR count": 250 },
+    { name: "Go", "PR count": 180 },
+    { name: "JavaScript", "PR count": 120 },
+    { name: "C++", "PR count": 80 },
+    { name: "Rust", "PR count": 60 },
+    { name: "C#", "PR count": 50 },
+    { name: "Ruby", "PR count": 40 },
+  ];
+
   const COLORS = ["#2563eb", "#1e40af", "#64748b", "#0ea5e9"]; // blues + gray
 
   // --- State ---------------------------------------------------------------
-  const [activeModel, setActiveModel] = useState("GPT-4");
+  const [activeModel, setActiveModel] = useState(null);
   const [onlyOpenSource, setOnlyOpenSource] = useState(false);
   const [query, setQuery] = useState("");
-  const [activeModelCommercial, setActiveModelCommercial] = useState("GPT-4");
+  const [activeModelCommercial, setActiveModelCommercial] = useState(null);
+  
+  // Trajectory viewer state
+  const [trajectoryData, setTrajectoryData] = useState(null);
+  const [trajectoryLoading, setTrajectoryLoading] = useState(true);
+  const [trajectoryError, setTrajectoryError] = useState(null);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [selectedLanguage, setSelectedLanguage] = useState("Python");
 
   const filteredEval = useMemo(() => {
     let rows = baseEval;
@@ -54,14 +125,112 @@ export default function SWEbenchResearchPage() {
     return rows;
   }, [baseEval, onlyOpenSource, query]);
 
-  const selectedRow = filteredEval.find((r) => r.model === activeModel) || filteredEval[0];
-  const selectedRowCommercial = baseEval.find((r) => r.model === activeModelCommercial) || baseEval[0];
-  const commercialData = useMemo(
-    () => baseEval.map((r) => ({ ...r, pass_at_1: Math.min(1, r.pass_at_1 + 0.05) })),
-    [baseEval]
-  );
+  const selectedRow = activeModel ? filteredEval.find((r) => r.model === activeModel) : null;
+  const selectedRowCommercial = activeModelCommercial ? commercialEval.find((r) => r.model === activeModelCommercial) : null;
 
-  const fmtPct = (v) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "—");
+  const fmtPct = (v) => (typeof v === "number" ? `${(v * 100).toFixed(2)}%` : "—");
+
+  // Load trajectory data based on selected language
+  useEffect(() => {
+    const getTrajectoryFileName = (language) => {
+      switch (language) {
+        case 'Java':
+          return '/trajectory-data-java.json';
+        case 'JavaScript':
+          return '/trajectory-data-javascript.json';
+        case 'Python':
+        default:
+          return '/trajectory-data.json';
+      }
+    };
+
+    const fileName = getTrajectoryFileName(selectedLanguage);
+    
+    fetch(fileName)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Failed to load trajectory data for ${selectedLanguage}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        setTrajectoryData(data);
+        setTrajectoryLoading(false);
+        setTrajectoryError(null);
+        setCurrentStep(0); // Reset to first step when switching languages
+      })
+      .catch(err => {
+        setTrajectoryError(err.message);
+        setTrajectoryLoading(false);
+        setTrajectoryData(null);
+      });
+  }, [selectedLanguage]);
+
+  // Trajectory navigation functions
+  const goToPreviousStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const goToNextStep = () => {
+    if (trajectoryData && currentStep < trajectoryData.trajectory.length) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const goToStep = (stepIndex) => {
+    setCurrentStep(stepIndex);
+  };
+
+  // Get model name based on selected language
+  const getModelName = (language) => {
+    switch (language) {
+      case 'Java':
+        return 'qwen3-coder-480b-a35b-instruct';
+      case 'JavaScript':
+        return 'kimi-k2-instruct-0905';
+      case 'Python':
+      default:
+        return 'kimi-k2-instruct';
+    }
+  };
+
+  const renderStepContent = (stepData, stepIndex) => {
+    if (stepIndex === 0) {
+      return (
+        <div className="space-y-2">
+          <div className="bg-blue-50 border border-blue-200 p-3 rounded text-xs">
+            <h4 className="text-sm font-semibold text-blue-900 mb-1">User Instruction</h4>
+            <div className="text-blue-800 text-xs whitespace-pre-wrap">{stepData.query[1].content}</div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-2">
+        {stepData.thought && (
+          <div className="bg-blue-50 border border-blue-200 p-3 rounded text-xs">
+            <h4 className="text-sm font-semibold text-blue-900 mb-1">Thought</h4>
+            <div className="text-blue-800 text-xs whitespace-pre-wrap">{stepData.thought}</div>
+          </div>
+        )}
+        {stepData.action && (
+          <div className="bg-blue-100 border border-blue-300 p-3 rounded text-xs">
+            <h4 className="text-sm font-semibold text-blue-900 mb-1">Action</h4>
+            <div className="text-blue-800 font-mono text-xs bg-white p-2 rounded border">{stepData.action}</div>
+          </div>
+        )}
+        {stepData.observation && (
+          <div className="bg-blue-200 border border-blue-400 p-3 rounded text-xs">
+            <h4 className="text-sm font-semibold text-blue-900 mb-1">Observation</h4>
+            <div className="text-blue-800 text-xs whitespace-pre-wrap">{stepData.observation}</div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // --- UI ------------------------------------------------------------------
   return (
@@ -75,7 +244,7 @@ export default function SWEbenchResearchPage() {
         >
           Beyond SWE-Bench: SWE-Bench++
         </motion.h1>
-        <p className="text-gray-600 max-w-3xl mt-3">
+        <p className="text-black-600 max-w-3xl mt-3">
         We introduce a new framework for end-to-end evaluation and training of next-gen software engineering agents.
         </p>
       </div>
@@ -96,7 +265,7 @@ export default function SWEbenchResearchPage() {
               onChange={(e) => setQuery(e.target.value)}
               className="w-full md:w-56"
             />
-            <div className="flex items-center gap-2 text-sm text-gray-700">
+            <div className="flex items-center gap-2 text-sm text-black">
               <Switch checked={onlyOpenSource} onCheckedChange={setOnlyOpenSource} id="oss" />
               <label htmlFor="oss">Open-source only</label>
             </div>
@@ -117,26 +286,36 @@ export default function SWEbenchResearchPage() {
             {/* Overview – collapsible to avoid info dump */}
             <Accordion type="single" collapsible defaultValue="o1">
               <AccordionItem value="o1">
-                <AccordionTrigger className="text-2xl font-semibold">Overview</AccordionTrigger>
+                <AccordionTrigger className="text-xl">Overview</AccordionTrigger>
                 <AccordionContent>
                   <div className="grid md:grid-cols-3 gap-6">
                     <Card className="md:col-span-2">
                       <CardHeader>
-                        <CardTitle>SWE-bench++ (Public)</CardTitle>
+                        <div className="flex items-center gap-3">
+                          <CardTitle className="text-xl">SWE-bench++ (Public)</CardTitle>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => window.open('https://huggingface.co/datasets/TuringEnterprises/SWE-Bench-plus-plus', '_blank')}
+                            className="text-blue-600 hover:bg-transparent hover:text-blue-400"
+                          >
+                            Hugging Face <ArrowUpRight className="w-3 h-3 ml-1" />
+                          </Button>
+                        </div>
                       </CardHeader>
-                      <CardContent className="text-gray-700 leading-relaxed">
+                      <CardContent className="text-sm text-black leading-relaxed">
                       While foundational, benchmarks like SWE-bench, SWE-bench Verified, and other such variants are incomplete, with manually curated design causing scalability bottlenecks, weak test oracles, dataset aging and contamination, reproducibility challenges, and more. We introduce SWE-bench++: a reenvisioned, innovative, end-to-end evaluation framework. It both addresses existing evaluation pain points and introduces new capabilities, positioning it as a forerunner for software reasoning evaluation and training. SWE-bench++ (Public) is the community-accessible release of this benchmark. It includes 500 high-quality tasks designed to evaluate the ability of LLMs and coding agents to resolve real-world GitHub issues and pull requests.
                       </CardContent>
                     </Card>
                     <Card>
                       <CardHeader>
-                        <CardTitle>At a Glance</CardTitle>
+                        <CardTitle className="text-xl">At a Glance</CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-2 text-sm text-gray-700">
+                      <CardContent className="space-y-2 text-sm text-black">
                         <div className="flex justify-between"><span>Tasks</span><span>500</span></div>
                         <div className="flex justify-between"><span>Repos</span><span>11</span></div>
                         <div className="flex justify-between"><span>Languages</span><span>Py, Java, TS, Go, and more</span></div>
-                        <div className="flex justify-between"><span>Issues</span><span>6</span></div>
+                        <div className="flex justify-between"><span>Issue Types</span><span>6</span></div>
                       </CardContent>
                     </Card>
                   </div>
@@ -147,10 +326,10 @@ export default function SWEbenchResearchPage() {
             {/* Results + Controls */}
             <Card>
               <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between">
-                <CardTitle>Evaluation Results</CardTitle>
+                <CardTitle className="text-xl">Evaluation Results (Public)</CardTitle>
                 <div className="flex gap-3 items-center">
                   <Select value={activeModel} onValueChange={setActiveModel}>
-                    <SelectTrigger className="w-44"><SelectValue placeholder="Model" /></SelectTrigger>
+                    <SelectTrigger className="w-64 focus:outline-none focus:ring-0"><SelectValue placeholder="Select a model" /></SelectTrigger>
                     <SelectContent>
                       {filteredEval.map((r) => (
                         <SelectItem key={r.model} value={r.model}>{r.model}</SelectItem>
@@ -164,10 +343,10 @@ export default function SWEbenchResearchPage() {
                   {/* Horizontal (vertical layout) bar chart */}
                   <div className="md:col-span-2 h-72">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={filteredEval} layout="vertical">
+                      <BarChart data={filteredEval} layout="vertical" margin={{ left: 20, right: 20, top: 5, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" tickFormatter={(v) => `${Math.round(v * 100)}%`} domain={[0, 1]} />
-                        <YAxis type="category" dataKey="model" width={100} />
+                        <XAxis type="number" tickFormatter={(v) => `${(v * 100).toFixed(2)}%`} domain={[0, 0.5]} />
+                        <YAxis type="category" dataKey="model" width={180} />
                         <Tooltip formatter={(v) => fmtPct(Number(v))} />
                         <Legend />
                         <Bar
@@ -193,14 +372,16 @@ export default function SWEbenchResearchPage() {
                   <div className="space-y-3">
                     <div className="p-4 rounded-2xl bg-gray-50 border">
                       <div className="text-sm text-gray-500">Selected</div>
-                      <div className="text-xl font-semibold">{selectedRow?.model}</div>
-                      <div className="mt-2 text-gray-700">pass@1: <span className="font-medium">{fmtPct(selectedRow?.pass_at_1)}</span></div>
+                      <div className="text-lg">{selectedRow?.model || "None"}</div>
+                      <div className="mt-2 text-black">pass@1: <span className="font-medium">{selectedRow ? fmtPct(selectedRow.pass_at_1) : "—"}</span></div>
                     </div>
                     <Button 
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-blue-600 hover:bg-transparent hover:text-blue-400"
                       onClick={() => window.open('https://huggingface.co/datasets/TuringEnterprises/SWE-Bench-plus-plus', '_blank')}
                     >
-                      See leaderboard on Hugging Face
+                      See dataset on Hugging Face <ArrowUpRight className="w-3 h-3 ml-1" />
                     </Button>
                   </div>
                 </div>
@@ -210,7 +391,7 @@ export default function SWEbenchResearchPage() {
             {/* Our Methodology */}
             <Card>
               <CardHeader>
-                <CardTitle>Our Methodology</CardTitle>
+                <CardTitle className="text-xl">Our Methodology</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
@@ -220,8 +401,8 @@ export default function SWEbenchResearchPage() {
                         <span className="text-blue-600 font-semibold text-sm">1</span>
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Align: Define inclusion thresholds for candidate PRs</h3>
-                        <p className="text-gray-700 leading-relaxed">
+                        <h3 className="text-base text-black-900 font-semibold mb-2">Align: Define inclusion thresholds for candidate PRs</h3>
+                        <p className="text-sm text-black leading-relaxed">
                         Heuristic filters identify pull requests (PRs) that meet predefined quality thresholds, including repository activity, test presence, and PR–issue linkage. This step is designed to be fast and efficient, casting a wide net of thousands, or even millions, of potential tasks, to be vetted later with more comprehensive checks.
                         </p>
                       </div>
@@ -234,8 +415,8 @@ export default function SWEbenchResearchPage() {
                         <span className="text-blue-600 font-semibold text-sm">2</span>
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Calibrate: Filter for problem clarity and reproducibility</h3>
-                        <p className="text-gray-700 leading-relaxed">
+                        <h3 className="text-base text-black-900 font-semibold mb-2">Calibrate: Filter for problem clarity and reproducibility</h3>
+                        <p className="text-sm text-black leading-relaxed">
                           Each selected task undergoes rigorous filtering to ensure the problem statement is clear, 
                           the expected solution is well-defined, and the reproduction steps are unambiguous. 
                           This calibration process guarantees that evaluation results are meaningful and comparable.
@@ -250,8 +431,8 @@ export default function SWEbenchResearchPage() {
                         <span className="text-blue-600 font-semibold text-sm">3</span>
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Generate: Scaffold reproducible environments via agentic Dockerization</h3>
-                        <p className="text-gray-700 leading-relaxed">
+                        <h3 className="text-base text-black-900 font-semibold mb-2">Generate: Scaffold reproducible environments via agentic Dockerization</h3>
+                        <p className="text-sm text-black leading-relaxed">
                         We pair an LLM with a template-based scaffolding step to Dockerize each PR. It’s important to not rely solely on an LLM for this, as purely LLM-based containerizing is prone to security vulnerabilities, logic errors, and more. Template-based scaffolding really means that we’ve generated custom Dockerfile templates for each programming language that follow best practices for reproduction. Each one has placeholders that our agent will then intelligently populate.
                         </p>
                       </div>
@@ -264,8 +445,8 @@ export default function SWEbenchResearchPage() {
                         <span className="text-blue-600 font-semibold text-sm">4</span>
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Validate: Perform iterative quality assurance through combined LLM- and- human-expert feedback</h3>
-                        <p className="text-gray-700 leading-relaxed">
+                        <h3 className="text-base text-black-900 font-semibold mb-2">Validate: Perform iterative quality assurance through combined LLM- and- human-expert feedback</h3>
+                        <p className="text-sm text-black leading-relaxed">
                         While it ensures a valid file operationally and syntactically, a successful Docker build doesn’t necessarily measure efficiency or full correctness. For example, small issues like redundant steps or test command inaccuracy may slip through the cracks. Hence, we employ an LLM as the final quality check for each PR to pass.
                         </p>
                       </div>
@@ -278,8 +459,8 @@ export default function SWEbenchResearchPage() {
                         <span className="text-blue-600 font-semibold text-sm">5</span>
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Verify: Extract diagnostic states via hybrid log parsing</h3>
-                        <p className="text-gray-700 leading-relaxed">
+                        <h3 className="text-base text-black-900 font-semibold mb-2">Verify: Extract diagnostic states via hybrid log parsing</h3>
+                        <p className="text-sm text-black leading-relaxed">
                         SWE-bench++ uses 3 states to analyze test outcomes, as well as hybrid log parsing to extract test results from execution logs. Our hybrid log parser combines parsers used for standard testing frameworks with an LLM-generated log parser. This process eliminates manual engineering & debugging, thus allowing models and engineers to scalably analyze and debug test results in any framework.
                         </p>
                       </div>
@@ -292,13 +473,13 @@ export default function SWEbenchResearchPage() {
             {/* Distributions – vertical bar charts */}
             <Card>
               <CardHeader>
-                <CardTitle>Distributions</CardTitle>
+                <CardTitle className="text-xl">Task Distributions</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-2 gap-8">
                   {/* Issue Types Chart */}
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Issue Types</h3>
+                    <h3 className="text-base text-gray-900 mb-4">Issue Types</h3>
                     <div className="h-96">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={issueDist} margin={{ top: 5, right: 30, left: 20, bottom: 80 }}>
@@ -314,7 +495,7 @@ export default function SWEbenchResearchPage() {
                   
                   {/* Languages Chart */}
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Languages</h3>
+                    <h3 className="text-base text-gray-900 mb-4">Languages</h3>
                     <div className="h-96">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={langDist} margin={{ top: 5, right: 30, left: 20, bottom: 80 }}>
@@ -332,13 +513,13 @@ export default function SWEbenchResearchPage() {
             </Card>
 
             {/* Metadata & CLI – progressive disclosure */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <Accordion type="multiple" className="space-y-4 w-full">
+            {/* <div className="grid md:grid-cols-2 gap-6">
+              <Accordion type="multiple" className="space-y-4 w-full"> */}
                 {/* <AccordionItem value="m1">
                   <AccordionTrigger className="text-lg font-semibold">Metadata</AccordionTrigger>
                   <AccordionContent>
                     <Card>
-                      <CardContent className="p-4 text-sm text-gray-700 space-y-2">
+                      <CardContent className="p-4 text-sm text-black space-y-2">
                         <div>Version: <span className="font-medium">v0.9-public</span></div>
                         <div>Splits: <span className="font-medium">dev/test</span></div>
                         <div>Annotations: <span className="font-medium">patch, test, repo-state</span></div>
@@ -347,7 +528,7 @@ export default function SWEbenchResearchPage() {
                     </Card>
                   </AccordionContent>
                 </AccordionItem> */}
-                <AccordionItem value="m2">
+                {/* <AccordionItem value="m2">
                   <AccordionTrigger className="text-lg font-semibold">Evaluation CLI</AccordionTrigger>
                   <AccordionContent>
                     <Card>
@@ -365,9 +546,26 @@ swebench-eval --model gpt-4 --dataset public --metric pass@1 --output results.js
                       </CardContent>
                     </Card>
                   </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
+                </AccordionItem> */}
+              {/* </Accordion>
+            </div> */}
+
+            {/* Implications Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Implications</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-black leading-relaxed space-y-4">
+                  <p>
+                    The path to ASI resembles a three-legged race between model improvement and human evaluation: models get better, benchmarks adjust, and the cycle repeats. Essentially, models can only be systematically improved when benchmarks are rigorous enough to surface their limitations, creating a feedback loop where better models demand better benchmarks, and vice versa. Each side is dependent on the other to push forward. On the "benchmark side," SWE-bench++ gives the push ahead needed to stabilize the team.
+                  </p>
+                  <p>
+                    This framework both generalizes to other software engineering tasks (including those that may have non-standard build procedures or dependencies on external hardware), and paves the way for model hill-climbing and future research advancements (ex. realistic, evolving RL gyms). SWE-bench++ sets a new standard for evaluating and training software reasoning capabilities, with its core innovations addressing leaderboard overfitting and enabling the development of models that can more robustly reason, self correct, and plan.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* ---------------- COMMERCIAL ---------------- */}
@@ -375,32 +573,29 @@ swebench-eval --model gpt-4 --dataset public --metric pass@1 --output results.js
             {/* Overview (restored as accordion) */}
             <Accordion type="single" collapsible defaultValue="c0">
               <AccordionItem value="c0">
-                <AccordionTrigger className="text-2xl font-semibold">Overview</AccordionTrigger>
+                <AccordionTrigger className="text-xl">Overview</AccordionTrigger>
                 <AccordionContent>
                   <div className="grid md:grid-cols-3 gap-6">
                     {/* Concept */}
                     <Card className="md:col-span-2">
                       <CardHeader>
-                        <CardTitle>Concept</CardTitle>
+                        <CardTitle className="text-xl">SWE-bench++ (Commercial)</CardTitle>
                       </CardHeader>
-                      <CardContent className="text-gray-700 leading-relaxed">
-                        The commercial SWE-bench++ release extends the public variant with enterprise-grade assets: full agentic
-                        trajectories (JSONL), sandbox instrumentation, reproducible environments, and longitudinal task tracking
-                        for training and eval. Use this area to outline contractual terms, governance, and security posture.
+                      <CardContent className="text-sm text-black leading-relaxed">
+                        Our private, commercial SWE-bench++ dataset is the enterprise-grade release of our extended SWE-bench benchmark. It contains 3,892 high-quality tasks (an order of magnitude larger than the public set) that are designed for organizations to train, fine-tune, and benchmark production-ready coding agents.
                       </CardContent>
                     </Card>
 
                     {/* At a Glance */}
                     <Card>
                       <CardHeader>
-                        <CardTitle>At a Glance</CardTitle>
+                        <CardTitle className="text-xl">At a Glance</CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-2 text-sm text-gray-700">
-                        <div className="flex justify-between"><span>Repos</span><span>~250 (enterprise-curated)</span></div>
-                        <div className="flex justify-between"><span>Tasks</span><span>~1,200 + private addenda</span></div>
-                        <div className="flex justify-between"><span>Trajectories</span><span>{">= 50k steps"}</span></div>
-                        <div className="flex justify-between"><span>Retention</span><span>rolling quarterly</span></div>
-                        <div className="flex justify-between"><span>License</span><span>Commercial / EULA</span></div>
+                      <CardContent className="space-y-2 text-sm text-black">
+                        <div className="flex justify-between"><span>Tasks</span><span>3,800+ (enterprise-curated)</span></div>
+                        <div className="flex justify-between"><span>Repos</span><span>1000s+</span></div>
+                        <div className="flex justify-between"><span>Languages</span><span>9</span></div>
+                        <div className="flex justify-between"><span>Issue Types</span><span>6</span></div>
                       </CardContent>
                     </Card>
 
@@ -409,7 +604,7 @@ swebench-eval --model gpt-4 --dataset public --metric pass@1 --output results.js
                       <CardHeader>
                         <CardTitle>Access</CardTitle>
                       </CardHeader>
-                      <CardContent className="grid md:grid-cols-3 gap-4 text-sm text-gray-700">
+                      <CardContent className="grid md:grid-cols-3 gap-4 text-sm text-black">
                         <div className="flex justify-between md:block"><span className="text-gray-500">SLA</span><span className="font-medium">99.9%</span></div>
                         <div className="flex justify-between md:block"><span className="text-gray-500">Support</span><span className="font-medium">Research Concierge</span></div>
                         <div className="flex justify-between md:block"><span className="text-gray-500">PII Handling</span><span className="font-medium">Redaction on ingest</span></div>
@@ -421,7 +616,7 @@ swebench-eval --model gpt-4 --dataset public --metric pass@1 --output results.js
                       <CardHeader>
                         <CardTitle>Methods</CardTitle>
                       </CardHeader>
-                      <CardContent className="text-sm text-gray-700 space-y-2">
+                      <CardContent className="text-sm text-black space-y-2">
                         <div className="grid md:grid-cols-3 gap-4">
                           <div>
                             <div className="text-gray-500">Evaluation Protocol</div>
@@ -461,9 +656,9 @@ swebench-eval --model gpt-4 --dataset public --metric pass@1 --output results.js
                 <CardTitle>Evaluation Results (Commercial)</CardTitle>
                 <div className="flex gap-3 items-center">
                   <Select value={activeModelCommercial} onValueChange={setActiveModelCommercial}>
-                    <SelectTrigger className="w-44"><SelectValue placeholder="Model" /></SelectTrigger>
+                    <SelectTrigger className="w-64 focus:outline-none focus:ring-0"><SelectValue placeholder="Select a model" /></SelectTrigger>
                     <SelectContent>
-                      {baseEval.map((r) => (
+                      {commercialEval.map((r) => (
                         <SelectItem key={`commercial-${r.model}`} value={r.model}>{r.model}</SelectItem>
                       ))}
                     </SelectContent>
@@ -474,10 +669,10 @@ swebench-eval --model gpt-4 --dataset public --metric pass@1 --output results.js
                 <div className="grid md:grid-cols-3 gap-8">
                   <div className="md:col-span-2 h-72">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={commercialData} layout="vertical">
+                      <BarChart data={commercialEval} layout="vertical" margin={{ left: 20, right: 20, top: 5, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" tickFormatter={(v) => `${Math.round(v * 100)}%`} domain={[0, 1]} />
-                        <YAxis type="category" dataKey="model" width={100} />
+                        <XAxis type="number" tickFormatter={(v) => `${(v * 100).toFixed(2)}%`} domain={[0, 0.5]} />
+                        <YAxis type="category" dataKey="model" width={180} />
                         <Tooltip formatter={(v) => fmtPct(Number(v))} />
                         <Legend />
                         <Bar
@@ -488,7 +683,7 @@ swebench-eval --model gpt-4 --dataset public --metric pass@1 --output results.js
                           fill="#1e40af"
                           radius={[6, 6, 6, 6]}
                         >
-                          {commercialData.map((entry) => (
+                          {commercialEval.map((entry) => (
                             <Cell
                               key={`cell-commercial-${entry.model}`}
                               cursor="pointer"
@@ -502,8 +697,8 @@ swebench-eval --model gpt-4 --dataset public --metric pass@1 --output results.js
                   <div className="space-y-3">
                     <div className="p-4 rounded-2xl bg-gray-50 border">
                       <div className="text-sm text-gray-500">Selected</div>
-                      <div className="text-xl font-semibold">{selectedRowCommercial?.model}</div>
-                      <div className="mt-2 text-gray-700">pass@1: <span className="font-medium">{fmtPct(selectedRowCommercial?.pass_at_1)}</span></div>
+                      <div className="text-lg">{selectedRowCommercial?.model || "None"}</div>
+                      <div className="mt-2 text-black">pass@1: <span className="font-medium">{selectedRowCommercial ? fmtPct(selectedRowCommercial.pass_at_1) : "—"}</span></div>
                     </div>
                     {/* <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">Download Commercial Results (JSON)</Button> */}
                   </div>
@@ -514,7 +709,7 @@ swebench-eval --model gpt-4 --dataset public --metric pass@1 --output results.js
             {/* Our Methodology */}
             <Card>
               <CardHeader>
-                <CardTitle>Our Methodology</CardTitle>
+                <CardTitle className="text-xl">Our Methodology</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
@@ -524,8 +719,8 @@ swebench-eval --model gpt-4 --dataset public --metric pass@1 --output results.js
                         <span className="text-blue-600 font-semibold text-sm">1</span>
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Align: Define inclusion thresholds for candidate PRs</h3>
-                        <p className="text-gray-700 leading-relaxed">
+                        <h3 className="text-base text-black-900 font-semibold mb-2">Align: Define inclusion thresholds for candidate PRs</h3>
+                        <p className="text-sm text-black leading-relaxed">
                         Heuristic filters identify pull requests (PRs) that meet predefined quality thresholds, including repository activity, test presence, and PR–issue linkage. This step is designed to be fast and efficient, casting a wide net of thousands, or even millions, of potential tasks, to be vetted later with more comprehensive checks.
                         </p>
                       </div>
@@ -538,8 +733,8 @@ swebench-eval --model gpt-4 --dataset public --metric pass@1 --output results.js
                         <span className="text-blue-600 font-semibold text-sm">2</span>
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Calibrate: Filter for problem clarity and reproducibility</h3>
-                        <p className="text-gray-700 leading-relaxed">
+                        <h3 className="text-base text-black-900 font-semibold mb-2">Calibrate: Filter for problem clarity and reproducibility</h3>
+                        <p className="text-sm text-black leading-relaxed">
                           Each selected task undergoes rigorous filtering to ensure the problem statement is clear, 
                           the expected solution is well-defined, and the reproduction steps are unambiguous. 
                           This calibration process guarantees that evaluation results are meaningful and comparable.
@@ -554,8 +749,8 @@ swebench-eval --model gpt-4 --dataset public --metric pass@1 --output results.js
                         <span className="text-blue-600 font-semibold text-sm">3</span>
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Generate: Scaffold Reproducible environments via agentic Dockerization</h3>
-                        <p className="text-gray-700 leading-relaxed">
+                        <h3 className="text-base text-black-900 font-semibold mb-2">Generate: Scaffold Reproducible environments via agentic Dockerization</h3>
+                        <p className="text-sm text-black leading-relaxed">
                         We pair an LLM with a template-based scaffolding step to Dockerize each PR. It’s important to not rely solely on an LLM for this, as purely LLM-based containerizing is prone to security vulnerabilities, logic errors, and more. Template-based scaffolding really means that we’ve generated custom Dockerfile templates for each programming language that follow best practices for reproduction. Each one has placeholders that our agent will then intelligently populate.
                         </p>
                       </div>
@@ -568,8 +763,8 @@ swebench-eval --model gpt-4 --dataset public --metric pass@1 --output results.js
                         <span className="text-blue-600 font-semibold text-sm">4</span>
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Validate: Perform iterative quality assurance through combined LLM- and- human-expert feedback</h3>
-                        <p className="text-gray-700 leading-relaxed">
+                        <h3 className="text-base text-black-900 font-semibold mb-2">Validate: Perform iterative quality assurance through combined LLM- and- human-expert feedback</h3>
+                        <p className="text-sm text-black leading-relaxed">
                         While it ensures a valid file operationally and syntactically, a successful Docker build doesn’t necessarily measure efficiency or full correctness. For example, small issues like redundant steps or test command inaccuracy may slip through the cracks. Hence, we employ an LLM as the final quality check for each PR to pass.
                         </p>
                       </div>
@@ -582,8 +777,8 @@ swebench-eval --model gpt-4 --dataset public --metric pass@1 --output results.js
                         <span className="text-blue-600 font-semibold text-sm">5</span>
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Verify: Extract diagnostic states via hybrid log parsing</h3>
-                        <p className="text-gray-700 leading-relaxed">
+                        <h3 className="text-base text-black-900 font-semibold mb-2">Verify: Extract diagnostic states via hybrid log parsing</h3>
+                        <p className="text-sm text-black leading-relaxed">
                         SWE-bench++ uses 3 states to analyze test outcomes, as well as hybrid log parsing to extract test results from execution logs. Our hybrid log parser combines parsers used for standard testing frameworks with an LLM-generated log parser. This process eliminates manual engineering & debugging, thus allowing models and engineers to scalably analyze and debug test results in any framework.
                         </p>
                       </div>
@@ -605,10 +800,10 @@ swebench-eval --model gpt-4 --dataset public --metric pass@1 --output results.js
                           }}
                           className="text-left bg-blue-50 hover:bg-blue-100 p-4 rounded-lg transition-colors w-full"
                         >
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          <h3 className="text-base text-black-900 font-semibold mb-2">
                             Capture: Capture successful agentic trajectories for model finetuning
                           </h3>
-                          <p className="text-gray-700 leading-relaxed">
+                          <p className="text-sm text-black leading-relaxed">
                             We systematically capture and store successful agentic trajectories that demonstrate effective 
                             problem-solving strategies. These trajectories serve as high-quality training data for model 
                             fine-tuning, enabling the development of more capable AI agents through learning from 
@@ -625,16 +820,16 @@ swebench-eval --model gpt-4 --dataset public --metric pass@1 --output results.js
             {/* Distributions */}
             <Card>
               <CardHeader>
-                <CardTitle>Distributions</CardTitle>
+                <CardTitle className="text-xl">Task Distributions</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-2 gap-8">
                   {/* Issue Types Chart */}
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Issue Types</h3>
+                    <h3 className="text-base text-gray-900 mb-4">Issue Types</h3>
                     <div className="h-72">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={issueDist}>
+                        <BarChart data={commercialIssueDist}>
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="name" />
                           <YAxis />
@@ -648,10 +843,10 @@ swebench-eval --model gpt-4 --dataset public --metric pass@1 --output results.js
                   
                   {/* Languages Chart */}
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Languages</h3>
+                    <h3 className="text-base text-gray-900 mb-4">Languages</h3>
                     <div className="h-72">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={langDist}>
+                        <BarChart data={commercialLangDist}>
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="name" />
                           <YAxis />
@@ -666,45 +861,138 @@ swebench-eval --model gpt-4 --dataset public --metric pass@1 --output results.js
               </CardContent>
             </Card>
 
-            {/* Agentic Trajectories – interactive viewer placeholder */}
+            {/* Agentic Trajectories – interactive viewer */}
             <Card id="agentic-trajectory-explorer">
               <CardHeader>
-                <CardTitle>Agentic Trajectory Explorer</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-3 gap-6">
-                  <div className="space-y-3">
-                    <Select defaultValue="trace-001">
-                      <SelectTrigger className="w-full"><SelectValue placeholder="Select trace" /></SelectTrigger>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <CardTitle>Agentic Trajectory Viewer</CardTitle>
+                    <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                      <SelectTrigger className="w-32 h-8 text-xs bg-blue-100 border-transparent hover:bg-blue-200 focus:outline-none focus:ring-0">
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="trace-001">Trace #001 (bugfix/py)</SelectItem>
-                        <SelectItem value="trace-014">Trace #014 (refactor/java)</SelectItem>
-                        <SelectItem value="trace-108">Trace #108 (feature/cpp)</SelectItem>
+                        <SelectItem value="Python" className="text-xs">Python</SelectItem>
+                        <SelectItem value="Java" className="text-xs">Java</SelectItem>
+                        <SelectItem value="JavaScript" className="text-xs">JavaScript</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button variant="outline" className="w-full">Download Trajectory (JSONL)</Button>
-                    <div className="text-xs text-gray-500">Each trajectory includes tool calls, diffs, tests, and environment state.</div>
                   </div>
-                  <div className="md:col-span-2 p-4 border rounded-2xl bg-gray-50 h-72 overflow-auto text-sm leading-relaxed">
-                    <div className="font-mono text-gray-800">[00:00] plan → identify failing tests</div>
-                    <div className="font-mono text-gray-800">[00:07] tool.run(pytest -q)</div>
-                    <div className="font-mono text-gray-800">[00:30] read file: utils/normalize.py</div>
-                    <div className="font-mono text-gray-800">[01:05] patch applied (hunk 1/2)</div>
-                    <div className="font-mono text-gray-800">[02:10] tool.run(pytest -q) ⇒ 1 failed → iterate</div>
-                    <div className="font-mono text-gray-800">[03:42] patch applied (hunk 2/2) | tests pass ✓</div>
-                    <div className="font-mono text-gray-500 mt-3">(Replace with an interactive DAG/log viewer in production.)</div>
+                  <div className="text-black text-sm">
+                    Model: {getModelName(selectedLanguage)}
                   </div>
                 </div>
+              </CardHeader>
+              <CardContent>
+                {trajectoryLoading ? (
+                  <div className="flex items-center justify-center h-96">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                      <p className="text-sm text-gray-600">Loading trajectory data...</p>
+                    </div>
+                  </div>
+                ) : trajectoryError ? (
+                  <div className="text-center h-96 flex items-center justify-center">
+                    <div className="text-red-600 text-sm">Error loading data: {trajectoryError}</div>
+                  </div>
+                ) : trajectoryData ? (
+                  <div className="space-y-4">
+                    {/* Step Navigation */}
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        Step {currentStep} of {trajectoryData.trajectory.length}
+                      </h3>
+                      <div className="flex space-x-2">
+                        <Button
+                          onClick={goToPreviousStep}
+                          disabled={currentStep === 0}
+                          variant="ghost"
+                          size="sm"
+                          className="text-blue-600 hover:text-blue-400 disabled:text-blue-300 border-none hover:bg-transparent focus:bg-transparent active:bg-transparent"
+                        >
+                          ← Previous
+                        </Button>
+                        <Button
+                          onClick={goToNextStep}
+                          disabled={currentStep === trajectoryData.trajectory.length}
+                          variant="ghost"
+                          size="sm"
+                          className="text-blue-600 hover:text-blue-400 disabled:text-blue-300 border-none hover:bg-transparent focus:bg-transparent active:bg-transparent"
+                        >
+                          Next →
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="w-full bg-gray-200 rounded-full h-1">
+                      <div
+                        className="bg-blue-600 h-1 rounded-full transition-all duration-300"
+                        style={{ width: `${((currentStep + 1) / (trajectoryData.trajectory.length + 1)) * 100}%` }}
+                      ></div>
+                    </div>
+
+                    {/* Step Indicators */}
+                    <div className="flex flex-wrap gap-1">
+                      <button
+                        onClick={() => goToStep(0)}
+                        className={`px-2 py-1 text-xs rounded transition-colors ${
+                          currentStep === 0
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-300 text-black hover:bg-gray-400'
+                        }`}
+                      >
+                        User
+                      </button>
+                      {trajectoryData.trajectory.map((_, index) => (
+                        <button
+                          key={index + 1}
+                          onClick={() => goToStep(index + 1)}
+                          className={`px-2 py-1 text-xs rounded transition-colors ${
+                            index + 1 === currentStep
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                          }`}
+                        >
+                          {index + 1}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Current Step Content */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <div className="mb-3">
+                        <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                          {currentStep === 0 ? 'User Instruction' : `Model Step ${currentStep}`}
+                        </h4>
+                        <div className="text-xs text-gray-500">
+                          {currentStep === 0 
+                            ? 'Initial user instruction for the task'
+                            : `Execution time: ${trajectoryData.trajectory[currentStep - 1]?.execution_time?.toFixed(3)}s`
+                          }
+                        </div>
+                      </div>
+                      
+                      <div className="max-h-96 overflow-y-auto">
+                        {renderStepContent(
+                          currentStep === 0 ? trajectoryData.trajectory[0] : trajectoryData.trajectory[currentStep - 1], 
+                          currentStep
+                        )}
+                      </div>
+                    </div>
+
+                  </div>
+                ) : null}
               </CardContent>
             </Card>
 
             {/* Metadata & CLI */}
-            <Accordion type="multiple" className="space-y-4">
+            {/* <Accordion type="multiple" className="space-y-4">
               <AccordionItem value="cmeta">
                 <AccordionTrigger className="text-lg font-semibold">Metadata</AccordionTrigger>
                 <AccordionContent>
                   <Card>
-                    <CardContent className="p-4 text-sm text-gray-700 space-y-2">
+                    <CardContent className="p-4 text-sm text-black space-y-2">
                       <div>Version: <span className="font-medium">v0.9-commercial</span></div>
                       <div>Add-ons: <span className="font-medium">trajectories, env logs, security scan</span></div>
                       <div>Compliance: Placeholder details</div>
@@ -731,16 +1019,33 @@ swebench-eval --model gpt-4 --dataset commercial --with-trajectories --metric pa
                   </Card>
                 </AccordionContent>
               </AccordionItem>
-            </Accordion>
+            </Accordion> */}
+
+            {/* Implications Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Implications</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-black leading-relaxed space-y-4">
+                  <p>
+                    The path to ASI resembles a three-legged race between model improvement and human evaluation: models get better, benchmarks adjust, and the cycle repeats. Essentially, models can only be systematically improved when benchmarks are rigorous enough to surface their limitations, creating a feedback loop where better models demand better benchmarks, and vice versa. Each side is dependent on the other to push forward. On the "benchmark side," SWE-bench++ gives the push ahead needed to stabilize the team.
+                  </p>
+                  <p>
+                    This framework both generalizes to other software engineering tasks (including those that may have non-standard build procedures or dependencies on external hardware), and paves the way for model hill-climbing and future research advancements (ex. realistic, evolving RL gyms). SWE-bench++ sets a new standard for evaluating and training software reasoning capabilities, with its core innovations addressing leaderboard overfitting and enabling the development of models that can more robustly reason, self correct, and plan.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
 
-        {/* Footer CTA */}
+        {/* Footer CTA
         <div className="text-center py-12">
           <Button className="bg-blue-600 text-white hover:bg-blue-700 rounded-full px-8 py-3 text-lg">
             Access SWE-bench++
           </Button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

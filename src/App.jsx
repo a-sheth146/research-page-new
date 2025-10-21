@@ -6,6 +6,8 @@ import SWEbenchResearchPage from './SWEbenchResearchPage';
 
 function App() {
   return (
+    // GitHub Pages: <Router basename="/research-page-new">
+    // Localhost: <Router>
     <Router basename="/research-page-new">
       <div className="flex min-h-screen bg-gray-50">
         <Sidebar />
