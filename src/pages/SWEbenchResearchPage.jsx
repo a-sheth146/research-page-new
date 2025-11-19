@@ -1,15 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, LabelList } from "recharts";
 import { motion } from "framer-motion";
 import { useMemo, useState, useEffect } from "react";
-import { Info, ArrowUpRight } from "lucide-react";
 
 export default function SWEbenchResearchPage() {
 
@@ -24,6 +18,85 @@ export default function SWEbenchResearchPage() {
     { model: "qwen3-coder", split: "dev", pass_at_1: 0.0250 },
     { model: "qwen3-thinking-2507", split: "dev", pass_at_1: 0.0100 }
   ];
+
+
+  // 1) Public Issue Type → Count (total: 500)
+  const publicIssueTypeCounts = {
+    "bug-report": 246,
+    "feature-request": 209,
+    "chore": 21,
+    "performance-issue": 13,
+    "question": 10,
+    "documentation": 1,
+  };
+
+  // 2) Public Programming Language → Count (total: 500)
+  const publicLanguageCounts = {
+    "Python": 150,
+    "Go": 100,
+    "Java": 100,
+    "TypeScript": 53,
+    "JavaScript": 47,
+    "C++": 25,
+    "Rust": 25,
+  };
+
+  // 3) Public Repository Type → Count (total: 500)
+  const publicRepoTypeCounts = {
+    "devtools": 99,
+    "infra-devops": 83,
+    "ai-ml": 68,
+    "webdev": 61,
+    "applications": 45,
+    "sci-comp": 42,
+    "data-eng": 41,
+    "security": 23,
+    "graphics-media": 19,
+    "blockchain": 14,
+    "autonomy": 5,
+  };
+
+
+    // 1) Commercial Issue Type → Count (total: 3,891)
+  const commercialIssueTypeCounts = {
+    "bug-report": 2030,
+    "feature-request": 1482,
+    "performance-issue": 132,
+    "chore": 126,
+    "question": 100,
+    "documentation": 21,
+  };
+
+  // 2) Commercial Programming Language → Count (total: 3,891)
+  const commercialLanguageCounts = {
+    "Python": 1798,
+    "Go": 599,
+    "Java": 436,
+    "TypeScript": 311,
+    "C++": 288,
+    "Rust": 206,
+    "C#": 132,
+    "Ruby": 62,
+    "JavaScript": 60,
+  };
+
+  // 3) Commercial Repository Type → Count (total: 3,891)
+  const commercialRepoTypeCounts = {
+    "devtools": 821,
+    "sci-comp": 584,
+    "ai-ml": 584,
+    "infra-devops": 557,
+    "webdev": 311,
+    "applications": 300,
+    "data-eng": 241,
+    "security": 167,
+    "graphics-media": 160,
+    "blockchain": 105,
+    "autonomy": 66,
+  };
+
+
+
 
   /*
 
@@ -61,9 +134,9 @@ qwen3-thinking-2507	1.00%
   // Commercial dataset data
   const commercialEval = [
     { model: "claude-sonnet-4.5", split: "dev", pass_at_1: 0.2008 },
+    { model: "gpt-5-2025-08-07", split: "dev", pass_at_1: 0.1690 },
     { model: "gpt5-high-reasoning", split: "dev", pass_at_1: 0.1670 },
     { model: "claude-opus-4.1", split: "dev", pass_at_1: 0.1570 },
-    { model: "gpt-5-2025-08-07", split: "dev", pass_at_1: 0.1690 },
     { model: "gemini/gemini-2.5-pro", split: "dev", pass_at_1: 0.0798 },
     { model: "gpt-4o", split: "dev", pass_at_1: 0.0375 },
     { model: "qwen3-coder", split: "dev", pass_at_1: 0.0183 }
@@ -105,6 +178,23 @@ qwen3-coder	1.83%
 
   const COLORS = ["#2563eb", "#1e40af", "#64748b", "#0ea5e9"]; // blues + gray
 
+  // Color mapping for each model
+  const modelColors = {
+    "gpt-5-2025-08-07": "#2563eb",
+    "claude-sonnet-4.5": "#1e40af",
+    "gpt5-high-reasoning": "#64748b",
+    "claude-opus-4.1": "#0ea5e9",
+    "xai/grok-code-fast-1": "#8b5cf6",
+    "gemini/gemini-2.5-pro": "#ec4899",
+    "gpt-4o": "#10b981",
+    "qwen3-coder": "#f59e0b",
+    "qwen3-thinking-2507": "#ef4444",
+  };
+
+  const getModelColor = (modelName) => {
+    return modelColors[modelName] || "#2563eb";
+  };
+
   // --- State ---------------------------------------------------------------
   const [activeModel, setActiveModel] = useState(null);
   const [onlyOpenSource, setOnlyOpenSource] = useState(false);
@@ -117,6 +207,7 @@ qwen3-coder	1.83%
   const [trajectoryError, setTrajectoryError] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedLanguage, setSelectedLanguage] = useState("Python");
+  const [selectedDistribution, setSelectedDistribution] = useState("Public");
 
   const filteredEval = useMemo(() => {
     let rows = baseEval;
@@ -254,803 +345,501 @@ qwen3-coder	1.83%
         </p>
       </div>
 
-      {/* Sticky Controls
-      <div className="px-6 md:px-12 py-4 sticky top-0 z-40 bg-white/95 backdrop-blur border-b">
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Badge className="bg-blue-600 text-white rounded-full">Prototype</Badge>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Info className="w-4 h-4" /> Interactive mockup with progressive disclosure
+      {/* Resolve Rate Section */}
+      <div className="px-6 md:px-12 pt-16 pb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          <div>
+            <p className="text-black text-center mb-4">Pass@1 Resolve Rate</p>
+            <div className="flex justify-center mb-4">
+              <span className="inline-flex items-center justify-center px-2 py-1 rounded-full border border-blue-600 text-blue-600 text-xs font-medium">
+                Public
+              </span>
+            </div>
+            <div className="h-96">
+              <div className="h-full flex flex-col justify-between py-2">
+                {baseEval.map((entry, index) => {
+                  const percentage = entry.pass_at_1 * 100;
+                  const barColor = getModelColor(entry.model);
+                  return (
+                    <div key={`public-bar-${index}`} className="flex items-center gap-3 h-8">
+                      <div className="w-48 text-sm text-black text-right pr-3 truncate" title={entry.model}>
+                        {entry.model}
+                      </div>
+                      <div className="flex-1 relative h-6">
+                        {/* Light gray bar (100% background) */}
+                        <div className="absolute inset-0 bg-gray-200 rounded"></div>
+                        {/* Colored fill (pass_at_1 percentage) */}
+                        <div 
+                          className="absolute inset-y-0 left-0 rounded"
+                          style={{ width: `${percentage}%`, backgroundColor: barColor }}
+                        ></div>
+                        {/* Data label at the right edge of the gray bar */}
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-2 text-sm text-black">
+                          {percentage.toFixed(2)}%
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
-          <div className="ml-auto flex items-center gap-3 w-full md:w-auto">
-            <Input
-              placeholder="Search model…"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="w-full md:w-56"
-            />
-            <div className="flex items-center gap-2 text-sm text-black">
-              <Switch checked={onlyOpenSource} onCheckedChange={setOnlyOpenSource} id="oss" />
-              <label htmlFor="oss">Open-source only</label>
+          <div>
+            <p className="text-black text-center mb-4">Pass@1 Resolve Rate</p>
+            <div className="flex justify-center mb-4">
+              <span className="inline-flex items-center justify-center px-2 py-1 rounded-full border border-blue-900 text-blue-900 text-xs font-medium">
+                Commercial
+              </span>
+            </div>
+            <div className="h-96">
+              <div className="h-full flex flex-col justify-between py-2">
+                {commercialEval.map((entry, index) => {
+                  const percentage = entry.pass_at_1 * 100;
+                  const barColor = getModelColor(entry.model);
+                  return (
+                    <div key={`commercial-bar-${index}`} className="flex items-center gap-3 h-8">
+                      <div className="w-48 text-sm text-black text-right pr-3 truncate" title={entry.model}>
+                        {entry.model}
+                      </div>
+                      <div className="flex-1 relative h-6">
+                        {/* Light gray bar (100% background) */}
+                        <div className="absolute inset-0 bg-gray-200 rounded"></div>
+                        {/* Colored fill (pass_at_1 percentage) */}
+                        <div 
+                          className="absolute inset-y-0 left-0 rounded"
+                          style={{ width: `${percentage}%`, backgroundColor: barColor }}
+                        ></div>
+                        {/* Data label at the right edge of the gray bar */}
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-2 text-sm text-black">
+                          {percentage.toFixed(2)}%
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
-      </div> */}
+      </div>
 
-      {/* Main Content Tabs: Public vs Commercial */}
-      <div className="px-6 md:px-12 py-10">
-        <Tabs defaultValue="public" className="w-full">
-          <TabsList className="grid grid-cols-2 max-w-xl">
-            <TabsTrigger value="public">Public Dataset</TabsTrigger>
-            <TabsTrigger value="commercial">Commercial Dataset</TabsTrigger>
-          </TabsList>
+      {/* Overview Section */}
+      <div className="px-6 md:px-12 pt-16 pb-6">
+        <h2 className="text-center text-4xl text-black mb-6">Overview</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+          <div className="p-6 border border-gray-200 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:border-gray-300 cursor-default">
+            <h3 className="text-lg font-semibold text-black mb-3">Quality Assurance</h3>
+            <p className="text-sm text-black leading-relaxed">
+              All PRs are merged after 2024, with &gt;100 stars and active maintenance. Human experts review tasks for fairness at various steps.
+            </p>
+          </div>
+          <div className="p-6 border border-gray-200 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:border-gray-300 cursor-default">
+            <h3 className="text-lg font-semibold text-black mb-3">Task Diversity</h3>
+            <p className="text-sm text-black leading-relaxed">
+              1000s of repos, 9 languages, 6 issue types, 11 repo types, 7000+ commercially-available tasks.
+            </p>
+          </div>
+          <div className="p-6 border border-gray-200 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:border-gray-300 cursor-default">
+            <h3 className="text-lg font-semibold text-black mb-3">Easy Reproducibility</h3>
+            <p className="text-sm text-black leading-relaxed">
+              Dockerfile templates per language enable scalable environment configuration.
+            </p>
+          </div>
+          <div className="p-6 border border-gray-200 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:border-gray-300 cursor-default">
+            <h3 className="text-lg font-semibold text-black mb-3">PR Capture at Scale</h3>
+            <p className="text-sm text-black leading-relaxed">
+              Our initial sourcing phase captured &gt;10,000 PRs, a number that continuously grows via automated data-capture.
+            </p>
+          </div>
+          <div 
+            className="p-6 border border-gray-200 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:border-gray-300 cursor-pointer"
+            onClick={() => {
+              const element = document.getElementById('agentic-trajectory-explorer');
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+          >
+            <h3 className="text-lg font-semibold text-black mb-3">SFT / DPO Trajectory Capture</h3>
+            <p className="text-sm text-black leading-relaxed mb-3">
+              We capture successful agent trajectories that improve model performance through fine tuning.
+            </p>
+            <p className="text-sm text-blue-600 text-right">See more</p>
+          </div>
+        </div>
+      </div>
 
-          {/* ---------------- PUBLIC ---------------- */}
-          <TabsContent value="public" className="mt-8 space-y-8">
-            {/* Overview – collapsible to avoid info dump */}
-            <Accordion type="single" collapsible defaultValue="o1">
-              <AccordionItem value="o1">
-                <AccordionTrigger className="text-xl">Overview</AccordionTrigger>
-                <AccordionContent>
-                  <div className="grid md:grid-cols-3 gap-6">
-                    <Card className="md:col-span-2">
-                      <CardHeader>
-                        <div className="flex items-center gap-3">
-                          <CardTitle className="text-xl">SWE-bench++ (Public)</CardTitle>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => window.open('https://huggingface.co/datasets/TuringEnterprises/SWE-Bench-plus-plus', '_blank')}
-                            className="text-blue-600 hover:bg-transparent hover:text-blue-400"
-                          >
-                            Hugging Face <ArrowUpRight className="w-3 h-3 ml-1" />
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="text-sm text-black leading-relaxed">
-                      While foundational, benchmarks like SWE-bench, SWE-bench Verified, and other such variants are incomplete, with manually curated design causing scalability bottlenecks, weak test oracles, dataset aging and contamination, reproducibility challenges, and more. We introduce SWE-bench++: a reenvisioned, innovative, end-to-end evaluation framework. It both addresses existing evaluation pain points and introduces new capabilities, positioning it as a forerunner for software reasoning evaluation and training. SWE-bench++ (Public) is the community-accessible release of this benchmark. It includes 500 high-quality tasks designed to evaluate the ability of LLMs and coding agents to resolve real-world GitHub issues and pull requests.
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-xl">At a Glance</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2 text-sm text-black">
-                        <div className="flex justify-between"><span>Tasks</span><span>500</span></div>
-                        <div className="flex justify-between"><span>Repos</span><span>11</span></div>
-                        <div className="flex justify-between"><span>Languages</span><span>Py, Java, TS, Go, and more</span></div>
-                        <div className="flex justify-between"><span>Issue Types</span><span>6</span></div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+      {/* Task Distributions Section */}
+      <div className="px-6 md:px-12 pt-16 pb-6">
+        <h2 className="text-center text-4xl text-black mb-6">Task Distributions</h2>
+        <div className="flex justify-center gap-4 mb-6">
+          <button
+            onClick={() => setSelectedDistribution("Public")}
+            className={`inline-flex items-center justify-center px-4 py-2 rounded-full border text-xs font-medium transition-all ${
+              selectedDistribution === "Public"
+                ? "border-blue-600 text-blue-600 bg-blue-50"
+                : "border-blue-600 text-blue-600 hover:bg-blue-50"
+            }`}
+          >
+            Public
+          </button>
+          <button
+            onClick={() => setSelectedDistribution("Commercial")}
+            className={`inline-flex items-center justify-center px-4 py-2 rounded-full border text-xs font-medium transition-all ${
+              selectedDistribution === "Commercial"
+                ? "border-blue-900 text-blue-900 bg-blue-50"
+                : "border-blue-900 text-blue-900 hover:bg-blue-50"
+            }`}
+          >
+            Commercial
+          </button>
+        </div>
+        {selectedDistribution === "Public" ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Repository Type Chart */}
+            <div>
+              <h3 className="text-base text-gray-900 mb-4 text-center">Repository Type</h3>
+            <div className="h-96">
+              <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={Object.entries(publicRepoTypeCounts).map(([name, count]) => ({ name, "PR count": count }))} margin={{ top: 5, right: 30, left: 20, bottom: 80 }}>
+                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 10 }} />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="PR count" fill="#2563eb" radius={[8,8,0,0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+            
+            {/* Programming Language Chart */}
+            <div>
+              <h3 className="text-base text-gray-900 mb-4 text-center">Programming Language</h3>
+              <div className="h-96">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={Object.entries(publicLanguageCounts).map(([name, count]) => ({ name, "PR count": count }))} margin={{ top: 5, right: 30, left: 20, bottom: 80 }}>
+                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 10 }} />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="PR count" fill="#1e40af" radius={[8,8,0,0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            
+            {/* Issue Type Chart */}
+            <div>
+              <h3 className="text-base text-gray-900 mb-4 text-center">Issue Type</h3>
+              <div className="h-96">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={Object.entries(publicIssueTypeCounts).map(([name, count]) => ({ name, "PR count": count }))} margin={{ top: 5, right: 30, left: 20, bottom: 80 }}>
+                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 10 }} />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="PR count" fill="#64748b" radius={[8,8,0,0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Repository Type Chart */}
+            <div>
+              <h3 className="text-base text-gray-900 mb-4 text-center">Repository Type</h3>
+              <div className="h-96">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={Object.entries(commercialRepoTypeCounts).map(([name, count]) => ({ name, "PR count": count }))} margin={{ top: 5, right: 30, left: 20, bottom: 80 }}>
+                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 10 }} />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="PR count" fill="#2563eb" radius={[8,8,0,0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            
+            {/* Programming Language Chart */}
+            <div>
+              <h3 className="text-base text-gray-900 mb-4 text-center">Programming Language</h3>
+              <div className="h-96">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={Object.entries(commercialLanguageCounts).map(([name, count]) => ({ name, "PR count": count }))} margin={{ top: 5, right: 30, left: 20, bottom: 80 }}>
+                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 10 }} />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="PR count" fill="#1e40af" radius={[8,8,0,0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            
+            {/* Issue Type Chart */}
+            <div>
+              <h3 className="text-base text-gray-900 mb-4 text-center">Issue Type</h3>
+              <div className="h-96">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={Object.entries(commercialIssueTypeCounts).map(([name, count]) => ({ name, "PR count": count }))} margin={{ top: 5, right: 30, left: 20, bottom: 80 }}>
+                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 10 }} />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="PR count" fill="#64748b" radius={[8,8,0,0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
-            {/* Results + Controls */}
-            <Card>
-              <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between">
-                <CardTitle className="text-xl">Evaluation Results (Public)</CardTitle>
-                <div className="flex gap-3 items-center">
-                  <Select value={activeModel} onValueChange={setActiveModel}>
-                    <SelectTrigger className="w-64 focus:outline-none focus:ring-0"><SelectValue placeholder="Select a model" /></SelectTrigger>
-                    <SelectContent>
-                      {filteredEval.map((r) => (
-                        <SelectItem key={r.model} value={r.model}>{r.model}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+      {/* Methodology Section */}
+      <div className="px-6 md:px-12 py-6">
+        <h2 className="text-center text-4xl text-black mb-6">Methodology</h2>
+        <div className="space-y-6">
+          {/* Step 1 */}
+          <div className="p-6 border border-gray-200 rounded-lg">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-blue-600 font-semibold text-sm">1</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base text-black-900 font-semibold mb-2">Align: Define inclusion thresholds for candidate PRs</h3>
+                <p className="text-sm text-black leading-relaxed">
+                  Heuristic filters identify pull requests (PRs) that meet predefined quality thresholds, including repository activity, test presence, and PR–issue linkage. This step is designed to be fast and efficient, casting a wide net of thousands, or even millions, of potential tasks, to be vetted later with more comprehensive checks.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 2 */}
+          <div className="p-6 border border-gray-200 rounded-lg">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-blue-600 font-semibold text-sm">2</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base text-black-900 font-semibold mb-2">Calibrate: Filter for problem clarity and reproducibility</h3>
+                <p className="text-sm text-black leading-relaxed">
+                  Each selected task undergoes rigorous filtering to ensure the problem statement is clear, the expected solution is well-defined, and the reproduction steps are unambiguous. This calibration process guarantees that evaluation results are meaningful and comparable.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div className="p-6 border border-gray-200 rounded-lg">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-blue-600 font-semibold text-sm">3</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base text-black-900 font-semibold mb-2">Generate: Scaffold Reproducible environments via agentic Dockerization</h3>
+                <p className="text-sm text-black leading-relaxed">
+                  We pair an LLM with a template-based scaffolding step to Dockerize each PR. It's important to not rely solely on an LLM for this, as purely LLM-based containerizing is prone to security vulnerabilities, logic errors, and more. Template-based scaffolding really means that we've generated custom Dockerfile templates for each programming language that follow best practices for reproduction. Each one has placeholders that our agent will then intelligently populate.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 4 */}
+          <div className="p-6 border border-gray-200 rounded-lg">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-blue-600 font-semibold text-sm">4</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base text-black-900 font-semibold mb-2">Validate: Perform iterative quality assurance through combined LLM- and- human-expert feedback</h3>
+                <p className="text-sm text-black leading-relaxed">
+                  While it ensures a valid file operationally and syntactically, a successful Docker build doesn't necessarily measure efficiency or full correctness. For example, small issues like redundant steps or test command inaccuracy may slip through the cracks. Hence, we employ an LLM as the final quality check for each PR to pass.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 5 */}
+          <div className="p-6 border border-gray-200 rounded-lg">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-blue-600 font-semibold text-sm">5</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base text-black-900 font-semibold mb-2">Verify: Extract diagnostic states via hybrid log parsing</h3>
+                <p className="text-sm text-black leading-relaxed">
+                  SWE-bench++ uses 3 states to analyze test outcomes, as well as hybrid log parsing to extract test results from execution logs. Our hybrid log parser combines parsers used for standard testing frameworks with an LLM-generated log parser. This process eliminates manual engineering & debugging, thus allowing models and engineers to scalably analyze and debug test results in any framework.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 6 */}
+          <div 
+            className="p-6 border border-gray-200 rounded-lg cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:border-gray-300"
+            onClick={() => {
+              const element = document.getElementById('agentic-trajectory-explorer');
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-blue-600 font-semibold text-sm">6</span>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-4 mb-2">
+                  <h3 className="text-base text-black-900 font-semibold">Capture: Capture successful agentic trajectories for model finetuning</h3>
+                  <span className="inline-flex items-center justify-center px-2 py-1 rounded-full border border-blue-900 text-blue-900 text-xs font-medium">
+                    Commercial
+                  </span>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-3 gap-8">
-                  {/* Horizontal (vertical layout) bar chart */}
-                  <div className="md:col-span-2 h-72">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={filteredEval} layout="vertical" margin={{ left: 20, right: 20, top: 5, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" tickFormatter={(v) => `${(v * 100).toFixed(2)}%`} domain={[0, 0.5]} />
-                        <YAxis type="category" dataKey="model" width={180} />
-                        <Tooltip formatter={(v) => fmtPct(Number(v))} />
-                        <Legend />
-                        <Bar
-                          dataKey="pass_at_1"
-                          onClick={(data) => {
-                            if (data && data.payload && data.payload.model) setActiveModel(data.payload.model);
-                          }}
-                          fill="#2563eb"
-                          radius={[6, 6, 6, 6]}
-                        >
-                          {filteredEval.map((entry) => (
-                            <Cell
-                              key={`cell-${entry.model}`}
-                              cursor="pointer"
-                              fill={entry.model === activeModel ? "#1e40af" : "#2563eb"}
-                            />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  {/* Selected panel */}
-                  <div className="space-y-3">
-                    <div className="p-4 rounded-2xl bg-gray-50 border">
-                      <div className="text-sm text-gray-500">Selected</div>
-                      <div className="text-lg">{selectedRow?.model || "None"}</div>
-                      <div className="mt-2 text-black">pass@1: <span className="font-medium">{selectedRow ? fmtPct(selectedRow.pass_at_1) : "—"}</span></div>
-                    </div>
-                    <Button 
+                <p className="text-sm text-black leading-relaxed mb-3">
+                  We systematically capture and store successful agentic trajectories that demonstrate effective problem-solving strategies. These trajectories serve as high-quality training data for model fine-tuning, enabling the development of more capable AI agents through learning from successful execution patterns.
+                </p>
+                <p className="text-sm text-blue-600 text-right">See more</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Agentic Trajectory Viewer Section */}
+      <div className="px-6 md:px-12 pt-16 pb-16">
+        <h2 className="text-center text-4xl text-black mb-6">Agentic Trajectory Viewer</h2>
+        <Card id="agentic-trajectory-explorer">
+          <CardHeader>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <CardTitle>Language</CardTitle>
+                <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                  <SelectTrigger className="w-32 h-8 text-xs bg-blue-100 border-transparent hover:bg-blue-200 focus:outline-none focus:ring-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Python" className="text-xs">Python</SelectItem>
+                    <SelectItem value="Java" className="text-xs">Java</SelectItem>
+                    <SelectItem value="JavaScript" className="text-xs">JavaScript</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="text-black text-sm">
+                Model: {getModelName(selectedLanguage)}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {trajectoryLoading ? (
+              <div className="flex items-center justify-center h-96">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                  <p className="text-sm text-gray-600">Loading trajectory data...</p>
+                </div>
+              </div>
+            ) : trajectoryError ? (
+              <div className="text-center h-96 flex items-center justify-center">
+                <div className="text-red-600 text-sm">Error loading data: {trajectoryError}</div>
+              </div>
+            ) : trajectoryData ? (
+              <div className="space-y-4">
+                {/* Step Navigation */}
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Step {currentStep} of {trajectoryData.trajectory.length}
+                  </h3>
+                  <div className="flex space-x-2">
+                    <Button
+                      onClick={goToPreviousStep}
+                      disabled={currentStep === 0}
                       variant="ghost"
                       size="sm"
-                      className="w-full text-blue-600 hover:bg-transparent hover:text-blue-400"
-                      onClick={() => window.open('https://huggingface.co/datasets/TuringEnterprises/SWE-Bench-plus-plus', '_blank')}
+                      className="text-blue-600 hover:text-blue-400 disabled:text-blue-300 border-none hover:bg-transparent focus:bg-transparent active:bg-transparent"
                     >
-                      See dataset on Hugging Face <ArrowUpRight className="w-3 h-3 ml-1" />
+                      ← Previous
+                    </Button>
+                    <Button
+                      onClick={goToNextStep}
+                      disabled={currentStep === trajectoryData.trajectory.length}
+                      variant="ghost"
+                      size="sm"
+                      className="text-blue-600 hover:text-blue-400 disabled:text-blue-300 border-none hover:bg-transparent focus:bg-transparent active:bg-transparent"
+                    >
+                      Next →
                     </Button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Our Methodology */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Our Methodology</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="grid gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold text-sm">1</span>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-base text-black-900 font-semibold mb-2">Align: Define inclusion thresholds for candidate PRs</h3>
-                        <p className="text-sm text-black leading-relaxed">
-                        Heuristic filters identify pull requests (PRs) that meet predefined quality thresholds, including repository activity, test presence, and PR–issue linkage. This step is designed to be fast and efficient, casting a wide net of thousands, or even millions, of potential tasks, to be vetted later with more comprehensive checks.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold text-sm">2</span>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-base text-black-900 font-semibold mb-2">Calibrate: Filter for problem clarity and reproducibility</h3>
-                        <p className="text-sm text-black leading-relaxed">
-                          Each selected task undergoes rigorous filtering to ensure the problem statement is clear, 
-                          the expected solution is well-defined, and the reproduction steps are unambiguous. 
-                          This calibration process guarantees that evaluation results are meaningful and comparable.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold text-sm">3</span>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-base text-black-900 font-semibold mb-2">Generate: Scaffold reproducible environments via agentic Dockerization</h3>
-                        <p className="text-sm text-black leading-relaxed">
-                        We pair an LLM with a template-based scaffolding step to Dockerize each PR. It’s important to not rely solely on an LLM for this, as purely LLM-based containerizing is prone to security vulnerabilities, logic errors, and more. Template-based scaffolding really means that we’ve generated custom Dockerfile templates for each programming language that follow best practices for reproduction. Each one has placeholders that our agent will then intelligently populate.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold text-sm">4</span>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-base text-black-900 font-semibold mb-2">Validate: Perform iterative quality assurance through combined LLM- and- human-expert feedback</h3>
-                        <p className="text-sm text-black leading-relaxed">
-                        While it ensures a valid file operationally and syntactically, a successful Docker build doesn’t necessarily measure efficiency or full correctness. For example, small issues like redundant steps or test command inaccuracy may slip through the cracks. Hence, we employ an LLM as the final quality check for each PR to pass.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold text-sm">5</span>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-base text-black-900 font-semibold mb-2">Verify: Extract diagnostic states via hybrid log parsing</h3>
-                        <p className="text-sm text-black leading-relaxed">
-                        SWE-bench++ uses 3 states to analyze test outcomes, as well as hybrid log parsing to extract test results from execution logs. Our hybrid log parser combines parsers used for standard testing frameworks with an LLM-generated log parser. This process eliminates manual engineering & debugging, thus allowing models and engineers to scalably analyze and debug test results in any framework.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                {/* Progress Bar */}
+                <div className="w-full bg-gray-200 rounded-full h-1">
+                  <div
+                    className="bg-blue-600 h-1 rounded-full transition-all duration-300"
+                    style={{ width: `${((currentStep + 1) / (trajectoryData.trajectory.length + 1)) * 100}%` }}
+                  ></div>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Distributions – vertical bar charts */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Task Distributions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-2 gap-8">
-                  {/* Issue Types Chart */}
-                  <div>
-                    <h3 className="text-base text-gray-900 mb-4">Issue Types</h3>
-                    <div className="h-96">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={issueDist} margin={{ top: 5, right: 30, left: 20, bottom: 80 }}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
-                          <YAxis />
-                          <Tooltip />
-                          <Bar dataKey="PR count" fill="#2563eb" radius={[8,8,0,0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
+                {/* Step Indicators */}
+                <div className="flex flex-wrap gap-1">
+                  <button
+                    onClick={() => goToStep(0)}
+                    className={`px-2 py-1 text-xs rounded transition-colors ${
+                      currentStep === 0
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-300 text-black hover:bg-gray-400'
+                    }`}
+                  >
+                    User
+                  </button>
+                  {trajectoryData.trajectory.map((_, index) => (
+                    <button
+                      key={index + 1}
+                      onClick={() => goToStep(index + 1)}
+                      className={`px-2 py-1 text-xs rounded transition-colors ${
+                        index + 1 === currentStep
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                      }`}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Current Step Content */}
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="mb-3">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                      {currentStep === 0 ? 'User Instruction' : `Model Step ${currentStep}`}
+                    </h4>
+                    <div className="text-xs text-gray-500">
+                      {currentStep === 0 
+                        ? 'Initial user instruction for the task'
+                        : `Execution time: ${trajectoryData.trajectory[currentStep - 1]?.execution_time?.toFixed(3)}s`
+                      }
                     </div>
                   </div>
                   
-                  {/* Languages Chart */}
-                  <div>
-                    <h3 className="text-base text-gray-900 mb-4">Languages</h3>
-                    <div className="h-96">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={langDist} margin={{ top: 5, right: 30, left: 20, bottom: 80 }}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
-                          <YAxis />
-                          <Tooltip />
-                          <Bar dataKey="PR count" fill="#1e40af" radius={[8,8,0,0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
+                  <div className="max-h-96 overflow-y-auto">
+                    {renderStepContent(
+                      currentStep === 0 ? trajectoryData.trajectory[0] : trajectoryData.trajectory[currentStep - 1], 
+                      currentStep
+                    )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Metadata & CLI – progressive disclosure */}
-            {/* <div className="grid md:grid-cols-2 gap-6">
-              <Accordion type="multiple" className="space-y-4 w-full"> */}
-                {/* <AccordionItem value="m1">
-                  <AccordionTrigger className="text-lg font-semibold">Metadata</AccordionTrigger>
-                  <AccordionContent>
-                    <Card>
-                      <CardContent className="p-4 text-sm text-black space-y-2">
-                        <div>Version: <span className="font-medium">v0.9-public</span></div>
-                        <div>Splits: <span className="font-medium">dev/test</span></div>
-                        <div>Annotations: <span className="font-medium">patch, test, repo-state</span></div>
-                        <div>Release Notes: Placeholder bullet list here.</div>
-                      </CardContent>
-                    </Card>
-                  </AccordionContent>
-                </AccordionItem> */}
-                {/* <AccordionItem value="m2">
-                  <AccordionTrigger className="text-lg font-semibold">Evaluation CLI</AccordionTrigger>
-                  <AccordionContent>
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Quick Start</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-sm overflow-auto">{`pip install swebench++
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      </div>
 
-swebench-eval --model gpt-4 --dataset public --metric pass@1 --output results.json`}</pre>
-                        <div className="mt-3 flex gap-3">
-                          <Button className="bg-blue-600 text-white">Copy</Button>
-                          <Button variant="outline" className="text-blue-700 border-blue-200">Open Docs</Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </AccordionContent>
-                </AccordionItem> */}
-              {/* </Accordion>
-            </div> */}
-
-            {/* Implications Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Implications</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm text-black leading-relaxed space-y-4">
-                  <p>
-                    The path to ASI resembles a three-legged race between model improvement and human evaluation: models get better, benchmarks adjust, and the cycle repeats. Essentially, models can only be systematically improved when benchmarks are rigorous enough to surface their limitations, creating a feedback loop where better models demand better benchmarks, and vice versa. Each side is dependent on the other to push forward. On the "benchmark side," SWE-bench++ gives the push ahead needed to stabilize the team.
-                  </p>
-                  <p>
-                    This framework both generalizes to other software engineering tasks (including those that may have non-standard build procedures or dependencies on external hardware), and paves the way for model hill-climbing and future research advancements (ex. realistic, evolving RL gyms). SWE-bench++ sets a new standard for evaluating and training software reasoning capabilities, with its core innovations addressing leaderboard overfitting and enabling the development of models that can more robustly reason, self correct, and plan.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* ---------------- COMMERCIAL ---------------- */}
-          <TabsContent value="commercial" className="mt-8 space-y-8">
-            {/* Overview (restored as accordion) */}
-            <Accordion type="single" collapsible defaultValue="c0">
-              <AccordionItem value="c0">
-                <AccordionTrigger className="text-xl">Overview</AccordionTrigger>
-                <AccordionContent>
-                  <div className="grid md:grid-cols-3 gap-6">
-                    {/* Concept */}
-                    <Card className="md:col-span-2">
-                      <CardHeader>
-                        <CardTitle className="text-xl">SWE-bench++ (Commercial)</CardTitle>
-                      </CardHeader>
-                      <CardContent className="text-sm text-black leading-relaxed">
-                        Our private, commercial SWE-bench++ dataset is the enterprise-grade release of our extended SWE-bench benchmark. It contains 3,892 high-quality tasks (an order of magnitude larger than the public set) that are designed for organizations to train, fine-tune, and benchmark production-ready coding agents.
-                      </CardContent>
-                    </Card>
-
-                    {/* At a Glance */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-xl">At a Glance</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2 text-sm text-black">
-                        <div className="flex justify-between"><span>Tasks</span><span>3,800+ (enterprise-curated)</span></div>
-                        <div className="flex justify-between"><span>Repos</span><span>1000s+</span></div>
-                        <div className="flex justify-between"><span>Languages</span><span>9</span></div>
-                        <div className="flex justify-between"><span>Issue Types</span><span>6</span></div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Access
-                    <Card className="md:col-span-3">
-                      <CardHeader>
-                        <CardTitle>Access</CardTitle>
-                      </CardHeader>
-                      <CardContent className="grid md:grid-cols-3 gap-4 text-sm text-black">
-                        <div className="flex justify-between md:block"><span className="text-gray-500">SLA</span><span className="font-medium">99.9%</span></div>
-                        <div className="flex justify-between md:block"><span className="text-gray-500">Support</span><span className="font-medium">Research Concierge</span></div>
-                        <div className="flex justify-between md:block"><span className="text-gray-500">PII Handling</span><span className="font-medium">Redaction on ingest</span></div>
-                      </CardContent>
-                    </Card> */}
-
-                    {/* Methods
-                    <Card className="md:col-span-3">
-                      <CardHeader>
-                        <CardTitle>Methods</CardTitle>
-                      </CardHeader>
-                      <CardContent className="text-sm text-black space-y-2">
-                        <div className="grid md:grid-cols-3 gap-4">
-                          <div>
-                            <div className="text-gray-500">Evaluation Protocol</div>
-                            <ul className="list-disc ml-5 mt-1 space-y-1">
-                              <li>Environment: containerized, pinned deps</li>
-                              <li>Judging: unit tests + semantic checks</li>
-                              <li>Metrics: pass@k, patch success, time-to-fix</li>
-                            </ul>
-                          </div>
-                          <div>
-                            <div className="text-gray-500">Grounding</div>
-                            <ul className="list-disc ml-5 mt-1 space-y-1">
-                              <li>Issue → PR alignment heuristics</li>
-                              <li>Repo state snapshots</li>
-                              <li>Trajectory provenance (tool calls)</li>
-                            </ul>
-                          </div>
-                          <div>
-                            <div className="text-gray-500">Access & Governance</div>
-                            <ul className="list-disc ml-5 mt-1 space-y-1">
-                              <li>Enterprise EULA & SLA</li>
-                              <li>PII redaction on ingest</li>
-                              <li>Audit logs (enterprise)</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card> */}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-
-            {/* Results */}
-            <Card>
-              <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between">
-                <CardTitle>Evaluation Results (Commercial)</CardTitle>
-                <div className="flex gap-3 items-center">
-                  <Select value={activeModelCommercial} onValueChange={setActiveModelCommercial}>
-                    <SelectTrigger className="w-64 focus:outline-none focus:ring-0"><SelectValue placeholder="Select a model" /></SelectTrigger>
-                    <SelectContent>
-                      {commercialEval.map((r) => (
-                        <SelectItem key={`commercial-${r.model}`} value={r.model}>{r.model}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-3 gap-8">
-                  <div className="md:col-span-2 h-72">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={commercialEval} layout="vertical" margin={{ left: 20, right: 20, top: 5, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" tickFormatter={(v) => `${(v * 100).toFixed(2)}%`} domain={[0, 0.5]} />
-                        <YAxis type="category" dataKey="model" width={180} />
-                        <Tooltip formatter={(v) => fmtPct(Number(v))} />
-                        <Legend />
-                        <Bar
-                          dataKey="pass_at_1"
-                          onClick={(data) => {
-                            if (data && data.payload && data.payload.model) setActiveModelCommercial(data.payload.model);
-                          }}
-                          fill="#1e40af"
-                          radius={[6, 6, 6, 6]}
-                        >
-                          {commercialEval.map((entry) => (
-                            <Cell
-                              key={`cell-commercial-${entry.model}`}
-                              cursor="pointer"
-                              fill={entry.model === activeModelCommercial ? "#0f2a78" : "#1e40af"}
-                            />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="p-4 rounded-2xl bg-gray-50 border">
-                      <div className="text-sm text-gray-500">Selected</div>
-                      <div className="text-lg">{selectedRowCommercial?.model || "None"}</div>
-                      <div className="mt-2 text-black">pass@1: <span className="font-medium">{selectedRowCommercial ? fmtPct(selectedRowCommercial.pass_at_1) : "—"}</span></div>
-                    </div>
-                    {/* <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">Download Commercial Results (JSON)</Button> */}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Our Methodology */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Our Methodology</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="grid gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold text-sm">1</span>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-base text-black-900 font-semibold mb-2">Align: Define inclusion thresholds for candidate PRs</h3>
-                        <p className="text-sm text-black leading-relaxed">
-                        Heuristic filters identify pull requests (PRs) that meet predefined quality thresholds, including repository activity, test presence, and PR–issue linkage. This step is designed to be fast and efficient, casting a wide net of thousands, or even millions, of potential tasks, to be vetted later with more comprehensive checks.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold text-sm">2</span>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-base text-black-900 font-semibold mb-2">Calibrate: Filter for problem clarity and reproducibility</h3>
-                        <p className="text-sm text-black leading-relaxed">
-                          Each selected task undergoes rigorous filtering to ensure the problem statement is clear, 
-                          the expected solution is well-defined, and the reproduction steps are unambiguous. 
-                          This calibration process guarantees that evaluation results are meaningful and comparable.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold text-sm">3</span>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-base text-black-900 font-semibold mb-2">Generate: Scaffold Reproducible environments via agentic Dockerization</h3>
-                        <p className="text-sm text-black leading-relaxed">
-                        We pair an LLM with a template-based scaffolding step to Dockerize each PR. It’s important to not rely solely on an LLM for this, as purely LLM-based containerizing is prone to security vulnerabilities, logic errors, and more. Template-based scaffolding really means that we’ve generated custom Dockerfile templates for each programming language that follow best practices for reproduction. Each one has placeholders that our agent will then intelligently populate.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold text-sm">4</span>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-base text-black-900 font-semibold mb-2">Validate: Perform iterative quality assurance through combined LLM- and- human-expert feedback</h3>
-                        <p className="text-sm text-black leading-relaxed">
-                        While it ensures a valid file operationally and syntactically, a successful Docker build doesn’t necessarily measure efficiency or full correctness. For example, small issues like redundant steps or test command inaccuracy may slip through the cracks. Hence, we employ an LLM as the final quality check for each PR to pass.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold text-sm">5</span>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-base text-black-900 font-semibold mb-2">Verify: Extract diagnostic states via hybrid log parsing</h3>
-                        <p className="text-sm text-black leading-relaxed">
-                        SWE-bench++ uses 3 states to analyze test outcomes, as well as hybrid log parsing to extract test results from execution logs. Our hybrid log parser combines parsers used for standard testing frameworks with an LLM-generated log parser. This process eliminates manual engineering & debugging, thus allowing models and engineers to scalably analyze and debug test results in any framework.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold text-sm">6</span>
-                      </div>
-                      <div className="flex-1">
-                        <button 
-                          onClick={() => {
-                            const element = document.getElementById('agentic-trajectory-explorer');
-                            if (element) {
-                              element.scrollIntoView({ behavior: 'smooth' });
-                            }
-                          }}
-                          className="text-left bg-blue-50 hover:bg-blue-100 p-4 rounded-lg transition-colors w-full"
-                        >
-                          <h3 className="text-base text-black-900 font-semibold mb-2">
-                            Capture: Capture successful agentic trajectories for model finetuning
-                          </h3>
-                          <p className="text-sm text-black leading-relaxed">
-                            We systematically capture and store successful agentic trajectories that demonstrate effective 
-                            problem-solving strategies. These trajectories serve as high-quality training data for model 
-                            fine-tuning, enabling the development of more capable AI agents through learning from 
-                            successful execution patterns.
-                          </p>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Distributions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Task Distributions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-2 gap-8">
-                  {/* Issue Types Chart */}
-                  <div>
-                    <h3 className="text-base text-gray-900 mb-4">Issue Types</h3>
-                    <div className="h-72">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={commercialIssueDist}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <Tooltip />
-                          <Legend />
-                          <Bar dataKey="PR count" fill="#2563eb" radius={[8,8,0,0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                  
-                  {/* Languages Chart */}
-                  <div>
-                    <h3 className="text-base text-gray-900 mb-4">Languages</h3>
-                    <div className="h-72">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={commercialLangDist}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <Tooltip />
-                          <Legend />
-                          <Bar dataKey="PR count" fill="#1e40af" radius={[8,8,0,0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Agentic Trajectories – interactive viewer */}
-            <Card id="agentic-trajectory-explorer">
-              <CardHeader>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <CardTitle>Agentic Trajectory Viewer</CardTitle>
-                    <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                      <SelectTrigger className="w-32 h-8 text-xs bg-blue-100 border-transparent hover:bg-blue-200 focus:outline-none focus:ring-0">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Python" className="text-xs">Python</SelectItem>
-                        <SelectItem value="Java" className="text-xs">Java</SelectItem>
-                        <SelectItem value="JavaScript" className="text-xs">JavaScript</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="text-black text-sm">
-                    Model: {getModelName(selectedLanguage)}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {trajectoryLoading ? (
-                  <div className="flex items-center justify-center h-96">
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                      <p className="text-sm text-gray-600">Loading trajectory data...</p>
-                    </div>
-                  </div>
-                ) : trajectoryError ? (
-                  <div className="text-center h-96 flex items-center justify-center">
-                    <div className="text-red-600 text-sm">Error loading data: {trajectoryError}</div>
-                  </div>
-                ) : trajectoryData ? (
-                  <div className="space-y-4">
-                    {/* Step Navigation */}
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        Step {currentStep} of {trajectoryData.trajectory.length}
-                      </h3>
-                      <div className="flex space-x-2">
-                        <Button
-                          onClick={goToPreviousStep}
-                          disabled={currentStep === 0}
-                          variant="ghost"
-                          size="sm"
-                          className="text-blue-600 hover:text-blue-400 disabled:text-blue-300 border-none hover:bg-transparent focus:bg-transparent active:bg-transparent"
-                        >
-                          ← Previous
-                        </Button>
-                        <Button
-                          onClick={goToNextStep}
-                          disabled={currentStep === trajectoryData.trajectory.length}
-                          variant="ghost"
-                          size="sm"
-                          className="text-blue-600 hover:text-blue-400 disabled:text-blue-300 border-none hover:bg-transparent focus:bg-transparent active:bg-transparent"
-                        >
-                          Next →
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="w-full bg-gray-200 rounded-full h-1">
-                      <div
-                        className="bg-blue-600 h-1 rounded-full transition-all duration-300"
-                        style={{ width: `${((currentStep + 1) / (trajectoryData.trajectory.length + 1)) * 100}%` }}
-                      ></div>
-                    </div>
-
-                    {/* Step Indicators */}
-                    <div className="flex flex-wrap gap-1">
-                      <button
-                        onClick={() => goToStep(0)}
-                        className={`px-2 py-1 text-xs rounded transition-colors ${
-                          currentStep === 0
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-300 text-black hover:bg-gray-400'
-                        }`}
-                      >
-                        User
-                      </button>
-                      {trajectoryData.trajectory.map((_, index) => (
-                        <button
-                          key={index + 1}
-                          onClick={() => goToStep(index + 1)}
-                          className={`px-2 py-1 text-xs rounded transition-colors ${
-                            index + 1 === currentStep
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                          }`}
-                        >
-                          {index + 1}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Current Step Content */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                      <div className="mb-3">
-                        <h4 className="text-sm font-semibold text-gray-900 mb-1">
-                          {currentStep === 0 ? 'User Instruction' : `Model Step ${currentStep}`}
-                        </h4>
-                        <div className="text-xs text-gray-500">
-                          {currentStep === 0 
-                            ? 'Initial user instruction for the task'
-                            : `Execution time: ${trajectoryData.trajectory[currentStep - 1]?.execution_time?.toFixed(3)}s`
-                          }
-                        </div>
-                      </div>
-                      
-                      <div className="max-h-96 overflow-y-auto">
-                        {renderStepContent(
-                          currentStep === 0 ? trajectoryData.trajectory[0] : trajectoryData.trajectory[currentStep - 1], 
-                          currentStep
-                        )}
-                      </div>
-                    </div>
-
-                  </div>
-                ) : null}
-              </CardContent>
-            </Card>
-
-            {/* Metadata & CLI */}
-            {/* <Accordion type="multiple" className="space-y-4">
-              <AccordionItem value="cmeta">
-                <AccordionTrigger className="text-lg font-semibold">Metadata</AccordionTrigger>
-                <AccordionContent>
-                  <Card>
-                    <CardContent className="p-4 text-sm text-black space-y-2">
-                      <div>Version: <span className="font-medium">v0.9-commercial</span></div>
-                      <div>Add-ons: <span className="font-medium">trajectories, env logs, security scan</span></div>
-                      <div>Compliance: Placeholder details</div>
-                    </CardContent>
-                  </Card>
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="ccli">
-                <AccordionTrigger className="text-lg font-semibold">Evaluation CLI</AccordionTrigger>
-                <AccordionContent>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Quick Start</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-sm overflow-auto">{`pip install swebench++-commercial
-
-swebench-eval --model gpt-4 --dataset commercial --with-trajectories --metric pass@1 --output results_comm.json`}</pre>
-                      <div className="mt-3 flex gap-3">
-                        <Button className="bg-blue-600 text-white">Copy</Button>
-                        <Button variant="outline" className="text-blue-700 border-blue-200">Request Access</Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion> */}
-
-            {/* Implications Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Implications</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm text-black leading-relaxed space-y-4">
-                  <p>
-                    The path to ASI resembles a three-legged race between model improvement and human evaluation: models get better, benchmarks adjust, and the cycle repeats. Essentially, models can only be systematically improved when benchmarks are rigorous enough to surface their limitations, creating a feedback loop where better models demand better benchmarks, and vice versa. Each side is dependent on the other to push forward. On the "benchmark side," SWE-bench++ gives the push ahead needed to stabilize the team.
-                  </p>
-                  <p>
-                    This framework both generalizes to other software engineering tasks (including those that may have non-standard build procedures or dependencies on external hardware), and paves the way for model hill-climbing and future research advancements (ex. realistic, evolving RL gyms). SWE-bench++ sets a new standard for evaluating and training software reasoning capabilities, with its core innovations addressing leaderboard overfitting and enabling the development of models that can more robustly reason, self correct, and plan.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        {/* Footer CTA
-        <div className="text-center py-12">
-          <Button className="bg-blue-600 text-white hover:bg-blue-700 rounded-full px-8 py-3 text-lg">
-            Access SWE-bench++
+      {/* Get Commercial Dataset Access Section */}
+      <div className="px-6 md:px-12 pt-32 pb-6">
+        <h2 className="text-center text-4xl text-black mb-6">Get Commercial Dataset Access</h2>
+        <p className="text-center text-black mb-6">
+          We offer access to our full dataset of 7,000+ tasks, in addition to agentic trajectories for SFT and DPO. Reach out to our team for a chat!
+        </p>
+        <div className="flex justify-center">
+          <Button className="rounded-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-2">
+            Contact Us
           </Button>
-        </div> */}
+        </div>
       </div>
     </div>
   );
