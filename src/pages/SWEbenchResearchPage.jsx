@@ -134,7 +134,9 @@ qwen3-coder	1.83%
   useEffect(() => {
     const getTrajectoryFileName = (language) => {
       // For GitHub Pages, use the explicit base path
-      const basePath = '/research-page-new/';
+      // const basePath = '/research-page-new/';
+      // For localhost, use root path
+      const basePath = '/';
       
       switch (language) {
         case 'Java':

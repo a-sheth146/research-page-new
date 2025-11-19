@@ -1,23 +1,38 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Sidebar from './components/Sidebar';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import TopNavbar from './components/TopNavbar';
 import HomePage from './pages/HomePage';
 import CodePage from './pages/CodePage';
-import SWEbenchResearchPage from './SWEbenchResearchPage';
+import SWEbenchResearchPage from './pages/SWEbenchResearchPage';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
 
 function App() {
   return (
     // GitHub Pages: <Router basename="/research-page-new">
     // Localhost: <Router>
-    <Router basename="/research-page-new">
-      <div className="flex min-h-screen bg-gray-50">
-        <Sidebar />
-        <main className="flex-1 ml-64">
+    <Router>
+      <ScrollToTop />
+      <div className="min-h-screen bg-white flex flex-col">
+        <TopNavbar />
+        <main className="pt-16 flex-1 px-8">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/code" element={<CodePage />} />
             <Route path="/swebench" element={<SWEbenchResearchPage />} />
           </Routes>
         </main>
+        <footer className="bg-white px-6 h-32 flex flex-col justify-end pb-4">
+          <p className="text-gray-600 text-sm">© 2025 Turing</p>
+        </footer>
       </div>
     </Router>
   );
