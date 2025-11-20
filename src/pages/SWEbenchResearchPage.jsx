@@ -4,6 +4,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, LabelList } from "recharts";
 import { motion } from "framer-motion";
 import { useMemo, useState, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
+
+// Tag color mapping
+const tagColors = {
+  'Code': 'bg-blue-100 text-blue-800',
+  'RL': 'bg-green-100 text-green-800',
+  'Multimodality': 'bg-purple-100 text-purple-800',
+  'Benchmark': 'bg-orange-100 text-orange-800',
+  'CUA': 'bg-teal-100 text-teal-800',
+};
+
+// Helper component to render circular tags
+function Tag({ tag }) {
+  return (
+    <span className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${tagColors[tag] || 'bg-gray-100 text-gray-800'}`}>
+      {tag}
+    </span>
+  );
+}
 
 export default function SWEbenchResearchPage() {
 
@@ -343,6 +362,36 @@ qwen3-coder	1.83%
         <p className="text-black-600 max-w-3xl mt-3">
         We introduce a new framework for end-to-end evaluation and training of next-gen software engineering agents.
         </p>
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          <Tag tag="Code" />
+          <Tag tag="Benchmark" />
+        </div>
+        <div className="flex items-center gap-3 mt-4">
+          <a
+            href="https://huggingface.co/datasets/TuringEnterprises/SWE-Bench-plus-plus"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-opacity hover:opacity-80"
+          >
+            <img
+              src="/hf-logo.svg"
+              alt="Hugging Face Dataset"
+              className="h-8 w-auto"
+            />
+          </a>
+          <a
+            href="https://github.com/TuringEnterprises/SWE-Bench-plus-plus"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-opacity hover:opacity-80"
+          >
+            <img
+              src="/gh-logo.png"
+              alt="GitHub Repository"
+              className="h-8 w-auto"
+            />
+          </a>
+        </div>
       </div>
 
       {/* Resolve Rate Section */}
@@ -426,6 +475,9 @@ qwen3-coder	1.83%
       {/* Overview Section */}
       <div className="px-6 md:px-12 pt-16 pb-6">
         <h2 className="text-center text-4xl text-black mb-6">Overview</h2>
+        <p className="text-center text-black max-w-4xl mx-auto mb-8 leading-relaxed">
+          SWE-bench++ is far more extensive than many previously released benchmarks, as its design enables automation of nearly the entire pipeline for its creation. This pipeline is unique because of its facilitation of scale and its ability to be generalized (especially to evaluation of other, more holistic software engineering tasks). We've open-sourced 500 of our 7,000+ tasks, accessible on both <a href="https://huggingface.co/datasets/TuringEnterprises/SWE-Bench-plus-plus" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:opacity-80 transition-opacity">Hugging Face</a> and <a href="https://github.com/TuringEnterprises/SWE-Bench-plus-plus" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:opacity-80 transition-opacity">GitHub</a>.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           <div className="p-6 border border-gray-200 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:border-gray-300 cursor-default">
             <h3 className="text-lg font-semibold text-black mb-3">Quality Assurance</h3>
@@ -464,7 +516,9 @@ qwen3-coder	1.83%
             <p className="text-sm text-black leading-relaxed mb-3">
               We capture successful agent trajectories that improve model performance through fine tuning.
             </p>
-            <p className="text-sm text-blue-600 text-right">See more</p>
+            <p className="text-sm text-blue-600 text-right flex items-center justify-end gap-1">
+              See more <ChevronDown className="w-4 h-4" />
+            </p>
           </div>
         </div>
       </div>
@@ -472,6 +526,9 @@ qwen3-coder	1.83%
       {/* Task Distributions Section */}
       <div className="px-6 md:px-12 pt-16 pb-6">
         <h2 className="text-center text-4xl text-black mb-6">Task Distributions</h2>
+        <p className="text-center text-black max-w-4xl mx-auto mb-6 leading-relaxed">
+          We prioritized both quantity and quality, having captured, scraped, and packaged high quality PRs across various programming languages, repository types, and issue types. Over 80% of tasks, both public and commercial, are in the medium-to-hard difficulty range.
+        </p>
         <div className="flex justify-center gap-4 mb-6">
           <button
             onClick={() => setSelectedDistribution("Public")}
@@ -495,7 +552,9 @@ qwen3-coder	1.83%
           </button>
         </div>
         {selectedDistribution === "Public" ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <>
+            <p className="text-center text-sm text-gray-500 mb-4"># PRs: 500 open-source subset</p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Repository Type Chart */}
             <div>
               <h3 className="text-base text-gray-900 mb-4 text-center">Repository Type</h3>
@@ -541,8 +600,11 @@ qwen3-coder	1.83%
               </div>
             </div>
           </div>
+          </>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <>
+            <p className="text-center text-sm text-gray-500 mb-4"># PRs: 3,892 evaluation subset</p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Repository Type Chart */}
             <div>
               <h3 className="text-base text-gray-900 mb-4 text-center">Repository Type</h3>
@@ -588,6 +650,7 @@ qwen3-coder	1.83%
               </div>
             </div>
           </div>
+          </>
         )}
       </div>
 
@@ -694,7 +757,9 @@ qwen3-coder	1.83%
                 <p className="text-sm text-black leading-relaxed mb-3">
                   We systematically capture and store successful agentic trajectories that demonstrate effective problem-solving strategies. These trajectories serve as high-quality training data for model fine-tuning, enabling the development of more capable AI agents through learning from successful execution patterns.
                 </p>
-                <p className="text-sm text-blue-600 text-right">See more</p>
+                <p className="text-sm text-blue-600 text-right flex items-center justify-end gap-1">
+                  See more <ChevronDown className="w-4 h-4" />
+                </p>
               </div>
             </div>
           </div>
