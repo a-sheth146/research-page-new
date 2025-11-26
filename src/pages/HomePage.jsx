@@ -134,7 +134,7 @@ export default function HomePage() {
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-gray-900 mb-1">Code Review Benchmark</h3>
-                  <p className="text-sm text-gray-600">We introduce a benchmark for high quality code review, enabling more robust evaluation of agentic code partners.</p>
+                  <p className="text-sm text-gray-600">We introduce a benchmark for high quality code review, enabling more robust evaluation of agentic code partners</p>
                 </div>
                 <div className="flex flex-col gap-2 ml-4 items-end">
                   <a
