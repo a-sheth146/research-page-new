@@ -244,10 +244,10 @@ qwen3-coder	1.83%
   // Load trajectory data based on selected language
   useEffect(() => {
     const getTrajectoryFileName = (language) => {
-      // For GitHub Pages, use the explicit base path
-      // const basePath = '/research-page-new/';
-      // For localhost, use root path
-      const basePath = '/';
+      // GitHub Pages: use the explicit base path
+      const basePath = '/research-page-new/';
+      // Localhost: use root path
+      // const basePath = '/';
       
       switch (language) {
         case 'Java':
@@ -375,7 +375,7 @@ qwen3-coder	1.83%
             className="transition-opacity hover:opacity-80"
           >
             <img
-              src="/hf-logo.svg"
+              src={`${import.meta.env.BASE_URL}hf-logo.svg`}
               alt="Hugging Face Dataset"
               className="h-8 w-auto"
             />
@@ -387,7 +387,7 @@ qwen3-coder	1.83%
             className="transition-opacity hover:opacity-80"
           >
             <img
-              src="/gh-logo.png"
+              src={`${import.meta.env.BASE_URL}gh-logo.png`}
               alt="GitHub Repository"
               className="h-8 w-auto"
             />
@@ -907,7 +907,7 @@ qwen3-coder	1.83%
                   className="flex items-center hover:opacity-80 transition-opacity"
                 >
                   <img
-                    src="/hf-logo.svg"
+                    src={`${import.meta.env.BASE_URL}hf-logo.svg`}
                     alt="Hugging Face"
                     className="h-8 w-auto"
                   />
@@ -919,7 +919,7 @@ qwen3-coder	1.83%
                   className="flex items-center hover:opacity-80 transition-opacity"
                 >
                   <img
-                    src="/gh-logo.png"
+                    src={`${import.meta.env.BASE_URL}gh-logo.png`}
                     alt="GitHub"
                     className="h-8 w-auto"
                   />

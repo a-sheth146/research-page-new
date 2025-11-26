@@ -65,7 +65,7 @@ export default function TopNavbar() {
               >
                 {isHome ? (
                   <img 
-                    src="/home-icon.png" 
+                    src={`${import.meta.env.BASE_URL}home-icon.png`}
                     alt="Home" 
                     className="h-8 w-8 object-contain flex-shrink-0"
                   />

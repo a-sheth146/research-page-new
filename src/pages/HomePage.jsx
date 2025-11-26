@@ -108,7 +108,7 @@ export default function HomePage() {
                     onClick={(e) => e.stopPropagation()}
                     className="flex items-center gap-1 hover:opacity-80 transition-opacity"
                   >
-                    <img src="/hf-logo.svg" alt="Hugging Face" className="w-10 h-10" />
+                    <img src={`${import.meta.env.BASE_URL}hf-logo.svg`} alt="Hugging Face" className="w-10 h-10" />
                   </a>
                   <a
                     href="https://github.com/TuringEnterprises/SWE-Bench-plus-plus"
@@ -117,7 +117,7 @@ export default function HomePage() {
                     onClick={(e) => e.stopPropagation()}
                     className="flex items-center gap-1 hover:opacity-80 transition-opacity"
                   >
-                    <img src="/gh-logo.png" alt="GitHub" className="w-10 h-10" />
+                    <img src={`${import.meta.env.BASE_URL}gh-logo.png`} alt="GitHub" className="w-10 h-10" />
                   </a>
                 </div>
               </div>
@@ -144,7 +144,7 @@ export default function HomePage() {
                     onClick={(e) => e.stopPropagation()}
                     className="flex items-center gap-1 hover:opacity-80 transition-opacity"
                   >
-                    <img src="/hf-logo.svg" alt="Hugging Face" className="w-10 h-10" />
+                    <img src={`${import.meta.env.BASE_URL}hf-logo.svg`} alt="Hugging Face" className="w-10 h-10" />
                   </a>
                 </div>
               </div>
@@ -168,7 +168,7 @@ export default function HomePage() {
             <div className="flex justify-center">
               <div className="block transition-transform duration-300 group-hover:scale-105">
                 <img 
-                  src="/podcast-logo.webp" 
+                  src={`${import.meta.env.BASE_URL}podcast-logo.webp`} 
                   alt="Podcast cover" 
                   className="w-32 h-32 border border-gray-200 rounded-lg object-cover"
                 />

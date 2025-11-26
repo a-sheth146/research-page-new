@@ -123,7 +123,7 @@ export default function CRAVEPage() {
             className="transition-opacity hover:opacity-80"
           >
             <img
-              src="/hf-logo.svg"
+              src={`${import.meta.env.BASE_URL}hf-logo.svg`}
               alt="Hugging Face Dataset"
               className="h-8 w-auto"
             />
@@ -222,7 +222,7 @@ export default function CRAVEPage() {
         </p>
         <div className="flex justify-center mt-8">
           <img 
-            src="/methodology-image.png" 
+            src={`${import.meta.env.BASE_URL}methodology-image.png`} 
             alt="Methodology" 
             className="max-w-2xl w-full h-auto"
           />
@@ -247,7 +247,7 @@ export default function CRAVEPage() {
             </p>
             <div className="flex items-center justify-center mt-4">
               <img 
-                src="/data-collection-image.png" 
+                src={`${import.meta.env.BASE_URL}data-collection-image.png`} 
                 alt="Data Collection" 
                 className="max-w-full h-auto"
               />
@@ -696,7 +696,7 @@ export default function CRAVEPage() {
                   className="flex items-center hover:opacity-80 transition-opacity"
                 >
                   <img
-                    src="/hf-logo.svg"
+                    src={`${import.meta.env.BASE_URL}hf-logo.svg`}
                     alt="Hugging Face"
                     className="h-8 w-auto"
                   />
