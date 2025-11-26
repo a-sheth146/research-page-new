@@ -4,8 +4,10 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
-  // Use GitHub Pages base path for production builds, root for development
-  const base = command === 'build' ? '/research-page-new/' : '/'
+  // GitHub Pages: Use GitHub Pages base path for production builds
+  const base = '/research-page-new/'
+  // Localhost: Use GitHub Pages base path for production builds, root for development
+  // const base = command === 'build' ? '/research-page-new/' : '/'
   
   return {
     plugins: [react()],

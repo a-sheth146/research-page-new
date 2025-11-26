@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -398,12 +399,8 @@ qwen3-coder	1.83%
       <div className="px-6 md:px-12 pt-16 pb-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           <div>
+            <p className="text-black text-center mb-2 font-semibold">Public Dataset: 500 Tasks</p>
             <p className="text-black text-center mb-4">Pass@1 Resolve Rate</p>
-            <div className="flex justify-center mb-4">
-              <span className="inline-flex items-center justify-center px-2 py-1 rounded-full border border-blue-600 text-blue-600 text-xs font-medium">
-                Public
-              </span>
-            </div>
             <div className="h-96">
               <div className="h-full flex flex-col justify-between py-2">
                 {baseEval.map((entry, index) => {
@@ -434,12 +431,8 @@ qwen3-coder	1.83%
             </div>
           </div>
           <div>
+            <p className="text-black text-center mb-2 font-semibold">Commercial Dataset: 7,000+ Tasks (3,892 Evaluation Subset)</p>
             <p className="text-black text-center mb-4">Pass@1 Resolve Rate</p>
-            <div className="flex justify-center mb-4">
-              <span className="inline-flex items-center justify-center px-2 py-1 rounded-full border border-blue-900 text-blue-900 text-xs font-medium">
-                Commercial
-              </span>
-            </div>
             <div className="h-96">
               <div className="h-full flex flex-col justify-between py-2">
                 {commercialEval.map((entry, index) => {
@@ -476,13 +469,13 @@ qwen3-coder	1.83%
       <div className="px-6 md:px-12 pt-16 pb-6">
         <h2 className="text-center text-4xl text-black mb-6">Overview</h2>
         <p className="text-center text-black max-w-4xl mx-auto mb-8 leading-relaxed">
-          SWE-bench++ is far more extensive than many previously released benchmarks, as its design enables automation of nearly the entire pipeline for its creation. This pipeline is unique because of its facilitation of scale and its ability to be generalized (especially to evaluation of other, more holistic software engineering tasks). We've open-sourced 500 of our 7,000+ tasks, accessible on both <a href="https://huggingface.co/datasets/TuringEnterprises/SWE-Bench-plus-plus" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:opacity-80 transition-opacity">Hugging Face</a> and <a href="https://github.com/TuringEnterprises/SWE-Bench-plus-plus" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:opacity-80 transition-opacity">GitHub</a>.
+        We introduce SWE-bench++ as a challenging, highly scalable, broadly sourced, multilingual, and fair benchmark. We address various key shortcomings of existing benchmarks, including irreproducible environments, manual-curation-induced scalability bottlenecks, dataset contamination, weak test oracles, and more. We've open-sourced 500 of our 7,000+ tasks, accessible with the evaluation harness on <a href="https://huggingface.co/datasets/TuringEnterprises/SWE-Bench-plus-plus" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:opacity-80 transition-opacity">Hugging Face</a>, with the evaluation repository on <a href="https://github.com/TuringEnterprises/SWE-Bench-plus-plus" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:opacity-80 transition-opacity">GitHub</a>.
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           <div className="p-6 border border-gray-200 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:border-gray-300 cursor-default">
             <h3 className="text-lg font-semibold text-black mb-3">Quality Assurance</h3>
             <p className="text-sm text-black leading-relaxed">
-              All PRs are merged after 2024, with &gt;100 stars and active maintenance. Human experts review tasks for fairness at various steps.
+              All PRs are uncontaminated (merged after 2024, with &gt;100 stars and active maintenance). Human experts review tasks for fairness at various steps.
             </p>
           </div>
           <div className="p-6 border border-gray-200 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:border-gray-300 cursor-default">
@@ -495,12 +488,6 @@ qwen3-coder	1.83%
             <h3 className="text-lg font-semibold text-black mb-3">Easy Reproducibility</h3>
             <p className="text-sm text-black leading-relaxed">
               Dockerfile templates per language enable scalable environment configuration.
-            </p>
-          </div>
-          <div className="p-6 border border-gray-200 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:border-gray-300 cursor-default">
-            <h3 className="text-lg font-semibold text-black mb-3">PR Capture at Scale</h3>
-            <p className="text-sm text-black leading-relaxed">
-              Our initial sourcing phase captured &gt;10,000 PRs, a number that continuously grows via automated data-capture.
             </p>
           </div>
           <div 
@@ -769,6 +756,9 @@ qwen3-coder	1.83%
       {/* Agentic Trajectory Viewer Section */}
       <div className="px-6 md:px-12 pt-16 pb-16">
         <h2 className="text-center text-4xl text-black mb-6">Agentic Trajectory Viewer</h2>
+        <p className="text-center text-black max-w-4xl mx-auto mb-8 leading-relaxed">
+          We capture successful agentic trajectories (reasoning paths that end on a "submit" action) for finetuning. Each model step includes three parts: a <strong>thought</strong> (what the model explored to arrive at its action), an <strong>action</strong> (what the model did), and <strong>observation</strong> (what the result of the model's action was in the environment). These trajectories enable us to provide proof-of-value for our PRs.
+        </p>
         <Card id="agentic-trajectory-explorer">
           <CardHeader>
             <div className="space-y-2">
@@ -894,16 +884,72 @@ qwen3-coder	1.83%
         </Card>
       </div>
 
-      {/* Get Commercial Dataset Access Section */}
-      <div className="px-6 md:px-12 pt-32 pb-6">
-        <h2 className="text-center text-4xl text-black mb-6">Get Commercial Dataset Access</h2>
-        <p className="text-center text-black mb-6">
-          We offer access to our full dataset of 7,000+ tasks, in addition to agentic trajectories for SFT and DPO. Reach out to our team for a chat!
-        </p>
-        <div className="flex justify-center">
-          <Button className="rounded-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-2">
-            Contact Us
-          </Button>
+      {/* Dataset Downloads Section */}
+      <div className="px-6 md:px-12 pt-16 pb-6">
+        <h2 className="text-center text-4xl text-black mb-6">Data Access</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto mt-8">
+          {/* Public Dataset Box */}
+          <div className="relative border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-all">
+            <div className="absolute -top-3 left-6">
+              <span className="inline-flex items-center justify-center px-4 py-2 rounded-full border border-blue-600 text-blue-600 bg-white text-xs font-medium">
+                Public
+              </span>
+            </div>
+            <div className="pt-4">
+              <p className="text-black leading-relaxed mb-4">
+                Our 500-task public dataset is available for download on Hugging Face. See the evaluation repo on GitHub.
+              </p>
+              <div className="flex items-center gap-4">
+                <a
+                  href="https://huggingface.co/datasets/TuringEnterprises/SWE-Bench-plus-plus"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center hover:opacity-80 transition-opacity"
+                >
+                  <img
+                    src="/hf-logo.svg"
+                    alt="Hugging Face"
+                    className="h-8 w-auto"
+                  />
+                </a>
+                <a
+                  href="https://github.com/TuringEnterprises/SWE-Bench-plus-plus"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center hover:opacity-80 transition-opacity"
+                >
+                  <img
+                    src="/gh-logo.png"
+                    alt="GitHub"
+                    className="h-8 w-auto"
+                  />
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Commercial Dataset Box */}
+          <Link
+            to="/contact?source=swebench"
+            className="relative block border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
+          >
+            <div className="absolute -top-3 left-6">
+              <span className="inline-flex items-center justify-center px-4 py-2 rounded-full border border-blue-900 text-blue-900 bg-white text-xs font-medium">
+                Commercial
+              </span>
+            </div>
+            <div className="pt-4">
+              <p className="text-black leading-relaxed mb-4">
+                Reach out to our team for access to our complete 7,000+ tasks, in addition to agentic trajectories.
+              </p>
+              <div className="flex justify-end">
+                <div className="flex items-center gap-1 text-blue-600 text-sm font-medium">
+                  Contact us
+                  <span className="text-lg">→</span>
+                </div>
+              </div>
+            </div>
+          </Link>
         </div>
       </div>
     </div>
