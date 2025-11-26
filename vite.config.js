@@ -12,6 +12,15 @@ export default defineConfig(({ command }) => {
   return {
     plugins: [react()],
     base,
+    // GitHub Pages: Build to root directory so GitHub Pages can serve from root
+    build: {
+      outDir: '.',
+      emptyOutDir: false, // Don't delete everything, just overwrite index.html and assets
+      rollupOptions: {
+        input: path.resolve(__dirname, 'index.html'),
+      },
+    },
+    publicDir: 'public',
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
