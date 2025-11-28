@@ -106,7 +106,7 @@ export default function LeaderboardsPage() {
               <h2 className="text-2xl font-semibold text-black mb-4 text-center">Code Review Bench</h2>
               <div>
                 <p className="text-sm text-gray-600 text-center mb-4">N = 1,200 tasks</p>
-                <div className="flex flex-col justify-start gap-4 py-2">
+                <div className="flex flex-col justify-start gap-4 py-2 mb-8">
                   {craveEvalSuccess.map((entry, index) => {
                     const percentage = entry.success_rate * 100;
                     const barColor = getCraveModelColor(entry.model);
