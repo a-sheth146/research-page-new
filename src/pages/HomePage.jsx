@@ -76,7 +76,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-white pt-40">
       {/* Header Section - Left Aligned */}
       <div className="mb-20">
-        <h1 className="text-2xl md:text-6xl text-gray-900 mb-4 text-left">
+        <h1 className="text-4xl md:text-6xl text-gray-900 mb-4 text-left">
           We're training superintelligence.
         </h1>
         <p className="text-lg text-gray-600 max-w-2xl text-left">
