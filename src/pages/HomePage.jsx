@@ -73,7 +73,7 @@ export default function HomePage() {
   const currentEpisode = episodes[currentEpisodeIndex];
 
   return (
-    <div className="min-h-screen bg-white pt-40">
+    <div className="min-h-screen bg-white pt-40 px-8 md:px-0">
       {/* Header Section - Left Aligned */}
       <div className="mb-20">
         <h1 className="text-4xl md:text-6xl text-gray-900 mb-4 text-left">

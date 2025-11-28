@@ -34,7 +34,7 @@ function App() {
             <Route path="/contact" element={<ContactPage />} />
           </Routes>
         </main>
-        <footer className="bg-white px-6 h-96 flex flex-col justify-end pb-4">
+        <footer className="bg-white px-6 h-96 flex flex-col justify-end pb-4 border-0">
           <p className="text-gray-600 text-sm">© 2025 Turing</p>
         </footer>
       </div>
