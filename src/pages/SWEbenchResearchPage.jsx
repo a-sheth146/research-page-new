@@ -352,7 +352,7 @@ qwen3-coder	1.83%
   return (
     <div className="bg-white text-gray-900 min-h-screen">
       {/* Top Header */}
-      <div className="px-6 md:px-12 pt-12 pb-4">
+      <div className="px-2 md:px-12 pt-12 pb-4">
         <motion.h1
           className="text-4xl md:text-5xl text-black"
           initial={{ opacity: 0, y: -8 }}
@@ -396,7 +396,7 @@ qwen3-coder	1.83%
       </div>
 
       {/* Resolve Rate Section */}
-      <div className="px-6 md:px-12 pt-16 pb-6">
+      <div className="px-2 md:px-12 pt-16 pb-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           <div>
             <p className="text-black text-center mb-2 font-semibold">Public Dataset: 500 Tasks</p>
@@ -466,7 +466,7 @@ qwen3-coder	1.83%
       </div>
 
       {/* Overview Section */}
-      <div className="px-6 md:px-12 pt-16 pb-6">
+      <div className="px-2 md:px-12 pt-16 pb-6">
         <h2 className="text-center text-4xl text-black mb-6">Overview</h2>
         <p className="text-center text-black max-w-4xl mx-auto mb-8 leading-relaxed">
         We introduce SWE-bench++ as a challenging, highly scalable, broadly sourced, multilingual, and fair benchmark. We address various key shortcomings of existing benchmarks, including irreproducible environments, manual-curation-induced scalability bottlenecks, dataset contamination, weak test oracles, and more. We've open-sourced 500 of our 7,000+ tasks, accessible with the evaluation harness on <a href="https://huggingface.co/datasets/TuringEnterprises/SWE-Bench-plus-plus" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:opacity-80 transition-opacity">Hugging Face</a>, with the evaluation repository on <a href="https://github.com/TuringEnterprises/SWE-Bench-plus-plus" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:opacity-80 transition-opacity">GitHub</a>.
@@ -511,7 +511,7 @@ qwen3-coder	1.83%
       </div>
 
       {/* Task Distributions Section */}
-      <div className="px-6 md:px-12 pt-16 pb-6">
+      <div className="px-2 md:px-12 pt-16 pb-6">
         <h2 className="text-center text-4xl text-black mb-6">Task Distributions</h2>
         <p className="text-center text-black max-w-4xl mx-auto mb-6 leading-relaxed">
           We prioritized both quantity and quality, having captured, scraped, and packaged high quality PRs across various programming languages, repository types, and issue types. Over 80% of tasks, both public and commercial, are in the medium-to-hard difficulty range.
@@ -642,7 +642,7 @@ qwen3-coder	1.83%
       </div>
 
       {/* Methodology Section */}
-      <div className="px-6 md:px-12 py-6">
+      <div className="px-2 md:px-12 py-6">
         <h2 className="text-center text-4xl text-black mb-6">Methodology</h2>
         <div className="space-y-6">
           {/* Step 1 */}
@@ -885,7 +885,7 @@ qwen3-coder	1.83%
       </div>
 
       {/* Dataset Downloads Section */}
-      <div className="px-6 md:px-12 pt-16 pb-6">
+      <div className="px-2 md:px-12 pt-16 pb-6">
         <h2 className="text-center text-4xl text-black mb-6">Data Access</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto mt-8">
           {/* Public Dataset Box */}

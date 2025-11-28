@@ -52,7 +52,7 @@ export default function LeaderboardsPage() {
 
   return (
     <div className="bg-white text-gray-900 min-h-screen">
-      <div className="px-6 md:px-12 pt-12 pb-4">
+      <div className="px-2 md:px-12 pt-12 pb-4">
         <motion.h1
           className="text-4xl md:text-5xl text-black text-center mb-12"
           initial={{ opacity: 0, y: -8 }}
@@ -139,7 +139,7 @@ export default function LeaderboardsPage() {
       </div>
 
       {/* Get Commercial Dataset Access Section */}
-      <div className="px-6 md:px-12 pt-32 pb-6">
+      <div className="px-2 md:px-12 pt-32 pb-6">
         <div className="max-w-4xl mx-auto">
           <Link to="/contact" className="block w-full p-6 border border-gray-200 rounded-lg hover:shadow-lg transition-all cursor-pointer text-left">
             <h2 className="text-center text-4xl text-black mb-4">Work with us to improve your models</h2>

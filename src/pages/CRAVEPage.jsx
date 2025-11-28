@@ -100,7 +100,7 @@ export default function CRAVEPage() {
   return (
     <div className="bg-white text-gray-900 min-h-screen">
       {/* Top Header */}
-      <div className="px-6 md:px-12 pt-12 pb-4">
+      <div className="px-2 md:px-12 pt-12 pb-4">
         <motion.h1
           className="text-4xl md:text-5xl text-black"
           initial={{ opacity: 0, y: -8 }}
@@ -132,7 +132,7 @@ export default function CRAVEPage() {
       </div>
 
       {/* Evaluation Charts Section */}
-      <div className="px-6 md:px-12 pt-16 pb-12">
+      <div className="px-2 md:px-12 pt-16 pb-12">
         <p className="text-black text-center mb-2 font-bold">Evaluation Subset: 1,200 Tasks</p>
         <div className="flex justify-center mb-6">
           <button
@@ -215,7 +215,7 @@ export default function CRAVEPage() {
       </div>
 
       {/* Methodology Section */}
-      <div className="px-6 md:px-12 pt-20 pb-6">
+      <div className="px-2 md:px-12 pt-20 pb-6">
         <h2 className="text-center text-4xl text-black mb-6">Methodology</h2>
         <p className="text-center text-black max-w-4xl mx-auto mb-8 leading-relaxed">
           Recent advances in software engineering have leveraged LLMs to create coding agents that handle simple tasks, supported by open-source datasets and unit-test-based verification. However, unit tests are insufficient for evaluating grounded software engineering skillset. We explore using code review as a more scalable and insightful way to evaluate and improve coding agents, leveraging abundant real-world review data to enhance code quality and developer productivity, anticipating a future where code agents and humans collaborate on complex software problems. Our dataset is structured as follows:
@@ -419,7 +419,7 @@ export default function CRAVEPage() {
       </div>
 
       {/* Task Distributions Section */}
-      <div className="px-6 md:px-12 pt-16 pb-6">
+      <div className="px-2 md:px-12 pt-16 pb-6">
         <h2 className="text-center text-4xl text-black mb-6">Task Distributions</h2>
 
         {/* Bar Charts Grid */}
@@ -487,7 +487,7 @@ export default function CRAVEPage() {
       </div>
 
       {/* Dataset Evaluation Section */}
-      <div className="px-6 md:px-12 pt-16 pb-6">
+      <div className="px-2 md:px-12 pt-16 pb-6">
         <h2 className="text-center text-4xl text-black mb-6">Dataset Evaluation</h2>
         <p className="text-center text-black max-w-4xl mx-auto mb-8 leading-relaxed">
           Due to our heuristic-based generation method, we anticipate that the dataset may contain some poorly defined tasks, possibly from LLM errors or unexpected edge cases from PR threads. To assess the frequency of such issues and determine the overall quality of the dataset, we performed a manual inspection of a subset of the tasks. Although almost all tasks pass our inspections, we've begun building a manual inspection pipeline to further improve task quality.

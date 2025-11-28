@@ -25,7 +25,7 @@ function App() {
       <ScrollToTop />
       <div className="min-h-screen bg-white flex flex-col">
         <TopNavbar />
-        <main className="pt-16 flex-1 px-8">
+        <main className="pt-16 flex-1 px-2 md:px-8">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/swebench" element={<SWEbenchResearchPage />} />
