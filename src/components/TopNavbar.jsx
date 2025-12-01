@@ -74,7 +74,7 @@ export default function TopNavbar() {
             <img 
               src={`${import.meta.env.BASE_URL}home-icon.png`}
               alt="Home" 
-              className="h-8 w-8 object-contain"
+              className="h-8 w-auto object-contain"
             />
           </Link>
         )}
