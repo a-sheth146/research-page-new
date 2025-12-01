@@ -61,7 +61,7 @@ export default function TopNavbar() {
 
   return (
     <nav className={cn(
-      "fixed top-0 left-0 right-0 h-16 bg-white z-50 transition-transform duration-300 shadow-sm",
+      "fixed top-0 left-0 right-0 h-16 bg-white z-50 transition-transform duration-300",
       isVisible ? "translate-y-0" : "-translate-y-full"
     )}>
       <div className="h-full flex items-center justify-between px-6">
@@ -74,7 +74,7 @@ export default function TopNavbar() {
             <img 
               src={`${import.meta.env.BASE_URL}home-icon.png`}
               alt="Home" 
-              className="h-8 w-auto object-contain"
+              className="h-4 w-auto object-contain"
             />
           </Link>
         )}
