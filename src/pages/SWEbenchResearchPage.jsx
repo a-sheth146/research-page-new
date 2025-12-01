@@ -929,8 +929,10 @@ qwen3-coder	1.83%
           </div>
 
           {/* Commercial Dataset Box */}
-          <Link
-            to="/contact?source=swebench"
+          <a
+            href="https://www.turing.com/advance/contact"
+            target="_blank"
+            rel="noopener noreferrer"
             className="relative block border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
           >
             <div className="absolute -top-3 left-6">
@@ -949,7 +951,7 @@ qwen3-coder	1.83%
                 </div>
               </div>
             </div>
-          </Link>
+          </a>
         </div>
       </div>
     </div>

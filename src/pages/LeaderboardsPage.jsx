@@ -141,7 +141,7 @@ export default function LeaderboardsPage() {
       {/* Get Commercial Dataset Access Section */}
       <div className="px-2 md:px-12 pt-32 pb-6">
         <div className="max-w-4xl mx-auto">
-          <Link to="/contact" className="block w-full p-6 border border-gray-200 rounded-lg hover:shadow-lg transition-all cursor-pointer text-left">
+          <a href="https://www.turing.com/advance/contact" target="_blank" rel="noopener noreferrer" className="block w-full p-6 border border-gray-200 rounded-lg hover:shadow-lg transition-all cursor-pointer text-left">
             <h2 className="text-center text-4xl text-black mb-4">Work with us to improve your models</h2>
             <p className="text-center text-black mb-8">
               We offer access to private datasets and agentic trajectories for SFT and DPO. Reach out to our team for a chat!
@@ -151,7 +151,7 @@ export default function LeaderboardsPage() {
                 Contact Us
               </div>
             </div>
-          </Link>
+          </a>
         </div>
       </div>
     </div>

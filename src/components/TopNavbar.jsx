@@ -8,7 +8,7 @@ const navigation = [
   { name: 'Swe-bench++', href: '/swebench' },
   { name: 'Code Review Bench', href: '/crave' },
   { name: 'Leaderboards', href: '/leaderboards' },
-  { name: 'Get in Touch', href: '/contact' },
+  { name: 'Get in Touch', href: 'https://www.turing.com/advance/contact', external: true },
 ];
 
 export default function TopNavbar() {
@@ -74,7 +74,7 @@ export default function TopNavbar() {
             <img 
               src={`${import.meta.env.BASE_URL}home-icon.png`}
               alt="Home" 
-              className="h-4 w-auto object-contain"
+              className="h-6 w-auto object-contain"
             />
           </Link>
         )}
@@ -82,7 +82,23 @@ export default function TopNavbar() {
         {/* Desktop Navigation - Hidden on mobile */}
         <div className="hidden md:flex items-center space-x-4 flex-nowrap">
           {otherItems.map((item) => {
-            const isActive = location.pathname === item.href;
+            const isActive = !item.external && location.pathname === item.href;
+            if (item.external) {
+              return (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    'group flex items-center gap-2 px-4 py-2 rounded-lg text-base whitespace-nowrap flex-shrink-0 transition-colors',
+                    'text-black hover:bg-gray-50 hover:text-gray-900'
+                  )}
+                >
+                  <span>{item.name}</span>
+                </a>
+              );
+            }
             return (
               <Link
                 key={item.name}
@@ -156,7 +172,30 @@ export default function TopNavbar() {
             >
               <div className="px-4 py-2">
                 {otherItems.map((item, index) => {
-                  const isActive = location.pathname === item.href;
+                  const isActive = !item.external && location.pathname === item.href;
+                  if (item.external) {
+                    return (
+                      <motion.div
+                        key={item.name}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05, duration: 0.2 }}
+                      >
+                        <a
+                          href={item.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className={cn(
+                            'block px-4 py-3 rounded-lg text-base font-medium transition-colors mb-1',
+                            'text-gray-900 hover:bg-gray-50'
+                          )}
+                        >
+                          {item.name}
+                        </a>
+                      </motion.div>
+                    );
+                  }
                   return (
                     <motion.div
                       key={item.name}
